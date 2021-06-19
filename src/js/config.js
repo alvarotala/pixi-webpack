@@ -3,7 +3,7 @@ const config = {
   width   : 720,
   height  : 1280,
 
-  master_volume: 0.2,
+  master_volume: 0.3, /// 0.2
 
   idle_timeout: 10, /// seconds
 

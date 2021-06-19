@@ -22,6 +22,7 @@ const completed = () => {
     return dismiss();
   }
 
+  gpio.send.ledstripAnimation(animations.ledstrip.fade(200));
   gpio.send.keyledAnimation(animations.keyled.keyboard([0,2,2, 0,2,0, 0,0,0,0,0,0,0,0]));
 }
 
@@ -31,6 +32,7 @@ const playWithBet = async (color) => {
 
   ui.components.roullete.animateDismiss();
 
+  gpio.send.ledstripAnimation(animations.ledstrip.fade(35));
   gpio.send.keyledAnimation(animations.keyled.waiting(25));
   await pause(200);
 
@@ -50,7 +52,7 @@ export const ContextBonus = {
   init: (params) => {
     ui.components.bonus.animateShow(params);
 
-    gpio.send.ledstripAnimation([[1,0,1,100],[1,1,0,100]]); // purple - orange..
+    gpio.send.ledstripAnimation(animations.ledstrip.fade(200));
     gpio.send.keyledAnimation(animations.keyled.keyboard([0,2,2, 0,2,0, 0,0,0,0,0,0,0,0]));
 
     playSound('bonusintro');

@@ -74,7 +74,7 @@ const f = {
     gpio.send.keyledAnimation(animations.keyled.idle(50));
 
     playSound('chiptronical', { loop: true });
-    // reggaetonn en 8bits.. asco..
+    // reggaetonn en 8bits.. asco, pero para el pila..
     // https://www.youtube.com/watch?v=W0CXLk0BtvM
   },
 
@@ -87,12 +87,19 @@ const f = {
 
     Actions.scaleTo(f.logo, 0.7, 0.7, 0.5, Easing.easeInQuad).play();
 
+    f.optionn_pressed = undefined;
     fadeOutSound('chiptronical');
   },
 
   inputs: {
     default: () => {
       setContext('playing');
+    },
+
+    option: () => {
+      if (f.optionn_pressed) return;
+      f.optionn_pressed = true;
+      fadeOutSound('chiptronical', 0.02);
     },
 
     addcoins: (num) => {
