@@ -5,7 +5,7 @@ import { Actions, Interpolations } from 'pixi-actions';
 import Easing from './easing.js'
 import geom from './geom.js'
 
-import { promise, next, pause } from '../core/utils.js'
+import { promise, next, pause, playSound } from '../core/utils.js'
 
 import * as particles from 'pixi-particles'
 
@@ -114,6 +114,8 @@ export default class RoulleteSpinAnimatorSimple {
     ui.components.bets.multipliers.next();
 
     this.emitter.updateOwnerPos(cursor_tile.x + this.roullete.container.x, cursor_tile.y + this.roullete.container.y);
+
+    playSound('roulletestep');
   }
 
   async complete() {

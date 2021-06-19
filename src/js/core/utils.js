@@ -1,4 +1,8 @@
 import * as PIXI from 'pixi.js'
+import { sound } from '@pixi/sound';
+
+import config from '../config.js'
+
 
 export const promise = (callback) => {
   return new Promise(callback);
@@ -36,7 +40,12 @@ export const getSound = (name) => {
 }
 
 export const playSound = (name, options = null) => {
-  if (debugLevel == 0) return;
+  // if (debugLevel == 0) return;
+  // sound.volumeAll = config.master_volume;
+  if (options == null || options.volume == undefined ) {
+    options = { volume: config.master_volume };
+  }
+  options.volume = Math.min(options.volume, config.master_volume);
   getSound(name).play(options);
 };
 
@@ -46,7 +55,6 @@ export const stopSound = (name) => {
 
 export const fadeOutSound = (name, speed = 0.1, ms = 50) => {
   const sound = getSound(name);
-
   const interval = setInterval(() => {
     if (sound.volume > 0) {
       let nv = sound.volume - speed;
@@ -55,6 +63,7 @@ export const fadeOutSound = (name, speed = 0.1, ms = 50) => {
 
       if (sound.volume == 0) {
         sound.stop();
+        sound.volume = 1.0;
         clearInterval(interval);
       }
     }

@@ -1,6 +1,6 @@
 import config from '../../config.js'
 
-import { log, next, pause } from '../../core/utils.js'
+import { log, next, pause, playSound } from '../../core/utils.js'
 
 import RoulleteSpinAnimatorSimple from '../RoulleteSpinAnimatorSimple.js';
 import { setContext } from '../../core/contexts.js'
@@ -16,19 +16,19 @@ const audit = {
 
 }
 
-var activityTimeoutRef = null;
-var activityIntervalRef = null;
+let activityTimeoutRef = null;
+let activityIntervalRef = null;
 
 const startActivityInterval = () => {
   if (activityIntervalRef != null) return;
 
   if (activityTimeoutRef != null) {
-    clearInterval(activityTimeoutRef);
+    clearTimeout(activityTimeoutRef);
     activityTimeoutRef = null;
   }
 
   // ignore if in debug mode..
-  if (debugLevel > 0) return;
+  if (debugLevel == 1) return;
 
   activityIntervalRef = setInterval(() => {
     var foundedActivity = false;
@@ -56,7 +56,7 @@ const startActivityInterval = () => {
 
 const cancelActivityTimeout = () => {
   if (activityTimeoutRef != null) {
-    clearInterval(activityTimeoutRef);
+    clearTimeout(activityTimeoutRef);
     activityTimeoutRef = null;
   }
 
@@ -205,7 +205,7 @@ const spin = async () => {
   // var num = 9;
   // if (audit.roullete.spins > 0) num = 12;
 
-  const steps = ((2 + Math.floor(Math.random() * 4)) * len) + num;
+  const steps = ((2 + Math.floor(Math.random() * 2)) * len) + num;
   const pay = cases[num];
 
   log(num, pay, cases, steps);
@@ -217,6 +217,8 @@ const spin = async () => {
   ui.components.bets.animatePlaySelecteds()
 
   updateState();
+
+  playSound('roulletespin');
 
   const animator = new RoulleteSpinAnimatorSimple();
   await animator.run(steps);
@@ -248,12 +250,14 @@ const spincompleted = (pay) => {
 
   // Workaround: instead of Jackpot, users get a "free spin"..
   if (selected.jackpot != undefined) {
+    playSound('roulletelucky');
     updateState();
     return; // nothing happens.. just a free spin
   }
 
   ui.components.bets.reset();
 
+  if (pay == 0) playSound('roulletelos');
   if (pay > 0) {
     if (selected.bonus == true) {
       setContext('bonus', {amount: pay});
@@ -261,6 +265,7 @@ const spincompleted = (pay) => {
     }
 
     ui.components.score.addAtField('wins', pay);
+    playSound('roulletewin');
   }
 
   updateState();
@@ -285,6 +290,8 @@ export const ContextPlaying = {
     if (ui.components.score.fields.credits.value > 0) {
       gpio.send.ledstripAnimation(animations.ledstrip.playing_default());
     }
+
+    playSound('playingintro');
   },
 
   dealloc: () => {
@@ -337,11 +344,13 @@ export const ContextPlaying = {
 
       ui.components.bets.addAtPosition(index, 1);
       ui.components.score.addAtField('credits', -1);
+      playSound('addbet');
     },
 
     addcoins: (num) => {
       ui.components.score.addAtField('credits', num);
       gpio.send.ledstripAnimation(animations.ledstrip.playing_default());
+      playSound('addcoins');
     }
   }
 };

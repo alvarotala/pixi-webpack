@@ -65,6 +65,18 @@ export default class UIManager {
       // Audios
       .add('chiptronical', config.path_assets + '/audios/chiptronical.ogg')
 
+      .add('playingintro', config.path_assets + '/audios/mixkit-arcade-score-interface-217.wav')
+      .add('roulletespin', config.path_assets + '/audios/mixkit-arcade-bonus-alert-767.wav')
+      .add('roulletestep', config.path_assets + '/audios/mixkit-unlock-game-notification-253.wav')
+      .add('roulletewin', config.path_assets + '/audios/mixkit-magic-sweep-game-trophy-257.wav')
+      .add('roulletelos', config.path_assets + '/audios/mixkit-negative-game-notification-249.wav')
+      .add('roulletelucky', config.path_assets + '/audios/mixkit-arcade-approved-mission-205.wav')
+
+      .add('addbet', config.path_assets + '/audios/mixkit-arcade-game-jump-coin-216.wav')
+      .add('addcoins', config.path_assets + '/audios/mixkit-fairy-arcade-sparkle-866.wav')
+
+      .add('bonusintro', config.path_assets + '/audios/mixkit-arcade-bonus-229.wav')
+
 
       .load(this.build.bind(this))
   }

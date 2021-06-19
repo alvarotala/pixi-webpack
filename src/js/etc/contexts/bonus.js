@@ -1,6 +1,6 @@
 import config from '../../config.js'
 
-import { log, next, pause } from '../../core/utils.js'
+import { log, next, pause, playSound } from '../../core/utils.js'
 import { setContext } from '../../core/contexts.js'
 
 import { animations } from '../gpio_animations.js'
@@ -52,6 +52,8 @@ export const ContextBonus = {
 
     gpio.send.ledstripAnimation([[1,0,1,100],[1,1,0,100]]); // purple - orange..
     gpio.send.keyledAnimation(animations.keyled.keyboard([0,2,2, 0,2,0, 0,0,0,0,0,0,0,0]));
+
+    playSound('bonusintro');
   },
 
   inputs: {

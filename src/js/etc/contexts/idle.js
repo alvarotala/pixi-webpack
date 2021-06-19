@@ -73,7 +73,9 @@ const f = {
     gpio.send.ledstripAnimation(animations.ledstrip.idle(200));
     gpio.send.keyledAnimation(animations.keyled.idle(50));
 
-    playSound('chiptronical', { volume: 0.05, loop: true });
+    playSound('chiptronical', { loop: true });
+    // reggaetonn en 8bits.. asco..
+    // https://www.youtube.com/watch?v=W0CXLk0BtvM
   },
 
   dealloc: () => {
