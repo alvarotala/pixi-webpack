@@ -97,7 +97,7 @@ export default class BetsComponent {
     field.value = field.value + num;
     field.setText(field.value, (num > 0));
 
-    if (num > 0 && field.value <= 1) {
+    if (num > 0 && field.value >= 1) {
       field.selected.visible = true;
     }
   }

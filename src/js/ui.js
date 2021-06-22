@@ -104,10 +104,7 @@ export default class UIManager {
 
     app.ticker.add(actionsticker);
 
-    next(1000, () => setContext('bonus', {amount: 5}));
-
-    // setContext('idle');
-    // setContext('error');
+    next(1000, () => setContext('idle'));
   }
 
   stopAll() {

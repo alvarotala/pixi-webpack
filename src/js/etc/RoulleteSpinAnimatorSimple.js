@@ -132,7 +132,7 @@ export default class RoulleteSpinAnimatorSimple {
     gpio.send.ledstripAnimation(animations.ledstrip.flash(66), 6);
     await pause(300);
 
-    this.roullete.animateScale(0.7, -11, 1.0, 0.5, [current]); // 0.7, -10
+    this.roullete.animateScale(0.7, 10, 1.0, 0.5, [current]); // 0.7, -11
     Actions.scaleTo( current, 1.15, 1.15, 0.5, Easing.easeInQuad ).play();
 
     this.emitter.emit = false;

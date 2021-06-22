@@ -112,7 +112,7 @@ const updateState = async () => {
   }
 
   else {
-    if (getLucky()) {
+    if (cantPlayLastGame()) {
       keys[5] = 1; /// can play..
     }
 
@@ -131,7 +131,7 @@ const updateState = async () => {
   gpio.send.keyledAnimation(animations.keyled.keyboard(keys));
 }
 
-const getLucky = () => {
+const cantPlayLastGame = () => {
   const credits = ui.components.score.fields.credits.value;
   if (credits <= 0) return false; // not enougth credits..
 
@@ -141,9 +141,6 @@ const getLucky = () => {
 
   return true;
 };
-
-
-
 
 
 const simulate = (from, distance) => {
@@ -183,44 +180,77 @@ const spin = async () => {
   // check if bets are set..
   // if enougth credits, try to play last played bet.
   if (ui.components.bets.total() <= 0) {
-    const credits = ui.components.score.fields.credits.value;
-    if (credits <= 0) return; // not enougth credits..
-
-    // play previous bet..
-    const total = ui.components.bets.getLastPlayedTotal();
-    if (total <= 0 || credits < total) return; // no valid previous bets..
+    if (!cantPlayLastGame()) return;
 
     ui.components.bets.setLastPlayedFields();
-    ui.components.score.addAtField('credits', -total);
+    ui.components.score.addAtField('credits', -ui.components.bets.total());
   }
 
   // disable coiner
   gpio.send.setCoinerState(false);
 
 
+  const len = config.roullete_tiles.length;
   const cases = analyze();
 
-  const len = config.roullete_tiles.length;
-  const num = Math.floor(Math.random() * len);
+  console.log(cases);
 
-  // DEV: Test
+  let num =  Math.floor(Math.random() * config.roullete_tiles.length);
+  const totalbets = ui.components.bets.total();
 
-  // simulate for video recording..
-  // var num = 1;                             // bell - ignore bonus
-  // if (audit.roullete.spins == 1) num = 3;  // strawberry - play bonus
-  // if (audit.roullete.spins == 2) num = 10; // 772
-  // if (audit.roullete.spins == 3) num = 7;  // jackpot - ignore
-  // if (audit.roullete.spins == 4) num = 18; // 77
-  // if (audit.roullete.spins == 5) num = 6;  // jackpot - play
+  const a = Math.random() < 0.8 ? false : true;
+  if (a == true) {
+    num = Math.floor(Math.random() * len); // true random..
+    console.log(">>>>> TRUE random");
+  }
+  else {
+    console.log(">> pseudo random");
 
-  // only jackpot..
-  // var num = 9;
-  // if (audit.roullete.spins > 0) num = 12;
+    const indexes = [];
+    cases.forEach((c, i) => {
+      if (c <= totalbets) indexes.push(i);
+    });
+
+    const sel = Math.floor(Math.random() * indexes.length);
+    num = indexes[sel];
+  }
+
+  const pay = cases[num];
+  const ref = (ui.components.roullete.current + num) % len;
+
+  console.log('tot', totalbets);
+  console.log('num', num);
+  console.log('pay', pay);
+  console.log('ref', ref);
+  console.log('tex', config.roullete_tiles[ref].texture);
+
+
+  //
+  // let times   = 0;
+  // let people  = 10;
+  // let bets    = 100;
+  //
+  // for (var a = 0; a < people; a++) {
+  //
+  //   for (var i = 0; i < bets; i++) {
+  //     const rate = Math.random() < 0.8 ? false : true;
+  //
+  //     if (rate) {
+  //       const num = Math.floor(Math.random() * len);
+  //       if (num == 2) {
+  //           times++;
+  //       }
+  //     }
+  //   }
+  //
+  // }
+  //
+  // const total_played = (people * (bets * 1000));
+  // const total_payed  = (times * 100) * 1000
+  //
+  // console.log("times:", times, total_played - total_payed);
 
   const steps = ((2 + Math.floor(Math.random() * 2)) * len) + num;
-  const pay = cases[num];
-
-  log(num, pay, cases, steps);
 
   spining = true;
   audit.roullete.spins++;
@@ -237,7 +267,7 @@ const spin = async () => {
 
   // if context error, do nothing..
   if (currentContext != 'playing') return;
-  
+
   next(500, () => spincompleted(pay));
 };
 
@@ -253,7 +283,7 @@ const spincompleted = (pay) => {
   const i = ui.components.roullete.current;
   const selected = config.roullete_tiles[i];
 
-  log("> selected:", selected);
+  // log("> selected:", selected);
 
   gpio.send.ledstripAnimation(animations.ledstrip.playing_default());
 

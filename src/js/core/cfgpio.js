@@ -42,7 +42,9 @@ const inputsHandler = (event) => {
   switch (key) {
     case "U":
       const value = getmapkeyname(parseInt(data[0]));
-      dispatch(...value.split(":"));
+      if (value != null && value != undefined && value.length > 1) {
+        dispatch(...value.split(":"));
+      } 
       break;
     case "C":
       dispatch('addcoins', parseInt(data[0]));

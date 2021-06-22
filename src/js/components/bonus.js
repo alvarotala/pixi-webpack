@@ -100,8 +100,11 @@ export default class BonusComponent {
 
     this.roullete.scale.set(0.2, 0.2);
 
+    this.isplaying = false;
+    this.brakes = null;
     this.speed = 0.02;
-
+    this.decelerating = false;
+    
     this.ticker = (delta) => this.enterLoopAnimation();
     app.ticker.add(this.ticker);
 
@@ -189,10 +192,9 @@ export default class BonusComponent {
 
   play(target, oncomplete) {
     if (this.isplaying) return;
-    this.isplaying = true;
-
     this.oncomplete = oncomplete;
 
+    this.isplaying = true;
     this.decelerating = false;
     this.brakes = null;
     this.speed = this.getSpeedWithTargetFromCurrentRotation(target);
