@@ -3,36 +3,57 @@ import config, { game } from '../config.js'
 import storage from './storage.js'
 import Terminal from './terminal.js'
 
-import { log, next, pause } from './utils.js'
+import { log, next, pause, file } from './utils.js'
 
-import { mapGPIOtoInputs, rawGPIOListener, mapsetup, removeGPIOListeners } from './cfgpio.js'
+import { startGPIOInterface, mapGPIOtoInputs, rawGPIOListener, mapsetup, removeGPIOListeners } from './cfgpio.js'
 
-let terminal = new Terminal();
 config.autostart_interrupts = 4;
 config.settings_pin_length = 6;
 config.settings_pin = '446544';
+config.autostart_timeout = 1; // seconds
+
+let terminal = new Terminal();
 
 class Bootloader {
 
   boot() {
-    gpio.send.disableAll();
+    startGPIOInterface(this.cfgpio_url, (success) => {
+      if (!success) {
+        terminal.clear();
+        terminal.append('ERROR: 2041');
+        return; // cant connenct to gpio..
+      }
 
-    if (storage.get('installed') != 'yes') {
-        this.settings_keymap();
-        return;
-    }
+      gpio.send.disableAll();
 
-    this.mapping = storage.getObject('mapping');
+      if (storage.get('installed') != 'yes') {
+          this.settings_keymap();
+          return;
+      }
 
-    const screen = storage.getObject('screen');
-    terminal.container.x = screen.x;
-    terminal.container.y = screen.y;
-    terminal.container.scale.set(screen.scale, screen.scale);
+      file.getconfig((object) => {
+        if (object == null) {
+          // Block machine.. cant read config file..
+          terminal.clear();
+          terminal.append('ERROR: 3045');
+          return;
+        }
 
-    this.autostart_init();
+        log("***** global.app.config", object);
+        this.mapping = object.mapping
+        global.app.config = object;
+
+        this.autostart_init();
+      });
+    });
   }
 
   autostart_init() {
+    // set screen position..
+    terminal.container.x = app.config.screen.x;
+    terminal.container.y = app.config.screen.y;
+    terminal.container.scale.set(app.config.screen.scale, app.config.screen.scale);
+
     this.resetscreen();
 
     const autostart_update_screen = () => {
@@ -53,7 +74,7 @@ class Bootloader {
       }
     };
 
-    this.autostart_interval_timer = 5; // seconds
+    this.autostart_interval_timer = config.autostart_timeout;
     this.autostart_interval = setInterval(autostart_game.bind(this), 1000);
     this.autostart_interrupts = 0;
 
@@ -70,6 +91,7 @@ class Bootloader {
         clearInterval(this.autostart_interval);
         this.autostart_interval = null;
 
+        file.audit("BL:INI");
         this.settings_auth();
       }
     });
@@ -108,10 +130,13 @@ class Bootloader {
           terminal.newline();
           if (settings_auth_pin.join('') == config.settings_pin) {
             terminal.append("-> Acceso autorizado..");
+
+            file.audit("BL:AUTH:1");
             next(500, this.settings_main.bind(this));
             return;
           }
 
+          file.audit("BL:AUTH:0");
           terminal.append("-> Acceso denegado.");
           next(1000, this.start_game.bind(this));
         });
@@ -180,6 +205,7 @@ class Bootloader {
   // setup keys mapping
   async settings_keymap() {
     this.resetscreen();
+    this.mapping = [];
 
     const updateScreen = async () => {
       terminal.clear();
@@ -203,11 +229,12 @@ class Bootloader {
       }
     };
 
-    this.mapping = [];
     terminal.append('Iniciando configuracion teclas, aguarde un momento...');
     await pause(2000);
 
     rawGPIOListener((data) => {
+      if (this.gpioHasError(data)) return;
+
       const comps = data.split(":");
       if (comps[0] != 'U') return;
       this.mapping.push(parseInt(comps[1]));
@@ -285,14 +312,22 @@ class Bootloader {
     terminal.append('-> Guardar configuraciones.');
     terminal.newline(2);
 
+    const {x, y, scale} = terminal.container;
+
+    global.app.config = {
+      screen: {x: x, y: y, scale: scale.x},
+      mapping: this.mapping
+    };
+
+    file.setconfig(app.config);
+    log("***** saved global.app.config", app.config);
+
     terminal.append('> Enviando datos, aguarde un momento...');
     await pause(2000);
 
-    const c = terminal.container;
-    storage.setObject('screen', {x: c.x, y: c.y, scale: c.scale.x});
-    storage.setObject('mapping', this.mapping);
-    storage.set('installed', 'yes');
+    file.audit("BL:CNFS"); // config saved
 
+    storage.set('installed', 'yes');
     terminal.append('>> Datos guardados exitosamente.');
     await pause(2000);
 
@@ -304,12 +339,11 @@ class Bootloader {
     this.resetscreen();
     terminal.append('Iniciando juego...');
 
-    next(3000, () => {
+    next(3000, async () => {
       terminal.dispose();
       terminal = null;
 
-      this.resolve();
-      mapGPIOtoInputs();
+      this.resolve().then(mapGPIOtoInputs);
     });
   }
 
@@ -320,6 +354,8 @@ class Bootloader {
 
   keymapListener(callback) {
     rawGPIOListener((data) => {
+      if (this.gpioHasError(data)) return;
+
       const comps = data.split(":");
       if (comps[0] != 'U') return;
       const pin = mapsetup[this.mapping.indexOf(parseInt(comps[1]))];
@@ -328,13 +364,22 @@ class Bootloader {
     });
   }
 
+  gpioHasError(data) {
+    if (data != 'error') return false;
+
+    terminal.clear();
+    terminal.append('ERROR: 2054');
+    return true;
+  }
+
 }
 
-export const bootloader = (resolve) => {
+export const bootloader = (cfgpio_url, resolve) => {
   terminal.load('Crazy Fruits Machines - v0.1\n--------------------------------------------\n\n');
 
   const booter = new Bootloader();
   booter.resolve = resolve;
+  booter.cfgpio_url = cfgpio_url;
 
   booter.boot();
 };

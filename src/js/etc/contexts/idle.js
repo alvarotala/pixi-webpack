@@ -1,7 +1,7 @@
 import * as PIXI from 'pixi.js'
 import config from '../../config.js'
 
-import { log, next, pause, playSound, fadeOutSound } from '../../core/utils.js'
+import { log, next, pause, playSound, fadeOutSound, runsequencial } from '../../core/utils.js'
 import { setContext } from '../../core/contexts.js'
 
 import { animations } from '../gpio_animations.js'
@@ -70,8 +70,10 @@ const f = {
 
     app.ticker.add(enterLoopAnimation);
 
-    gpio.send.ledstripAnimation(animations.ledstrip.idle(200));
-    gpio.send.keyledAnimation(animations.keyled.idle(50));
+    runsequencial(100,
+      () => gpio.send.ledstripAnimation(animations.ledstrip.idle(200)),
+      () => gpio.send.keyledAnimation(animations.keyled.idle(50))
+    );
 
     playSound('chiptronical', { loop: true });
     // reggaetonn en 8bits.. asco, pero para el pila..

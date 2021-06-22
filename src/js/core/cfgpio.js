@@ -1,7 +1,10 @@
 import config from '../config.js'
-import { dispatch } from './inputs.js'
-import { log } from './utils.js'
 import storage from './storage.js'
+
+import { log, promise, pause, runsequencial, file } from './utils.js'
+
+import { dispatch } from './inputs.js'
+import { setContext, dispatchError } from './contexts.js'
 
 
 export const mapsetup = ['pay', 'left', 'right', 'option', 'cancel', 'play', 'numpad:0', 'numpad:1', 'numpad:2', 'numpad:3', 'numpad:4', 'numpad:5', 'numpad:6', 'numpad:7'];
@@ -16,23 +19,36 @@ function getmapkeyname(pin) {
 }
 
 function sendDataToGPIO(str) {
-  if (gpio.socket == null || gpio.socket == undefined) return;
-  if (gpio.socket.readyState == WebSocket.OPEN) gpio.socket.send(str);
+  return promise((resolve) => {
+    if (gpio.socket == null || gpio.socket == undefined) {
+      resolve(false);
+      return;
+    }
+
+    if (gpio.socket.readyState == WebSocket.OPEN) {
+      gpio.socket.send(str);
+      resolve(true);
+      return;
+    }
+
+    resolve(false);
+  });
 }
 
-const inputsHandler = (event, mapping) => {
-  const d = event.data.split(":")
-  switch (d[0]) {
+const inputsHandler = (event) => {
+  const data = event.data.split(":")
+  const key  = data.shift();
+
+  switch (key) {
     case "U":
-      const value = getmapkeyname(parseInt(d[1]));
-      const params = value.split(":");
-      dispatch(...params);
+      const value = getmapkeyname(parseInt(data[0]));
+      dispatch(...value.split(":"));
       break;
     case "C":
-      dispatch('addcoins', 1);
+      dispatch('addcoins', parseInt(data[0]));
       break;
     case "E":
-      log("> cfgpio error: ", d);
+      dispatchError(parseInt(data[0]));
       break;
   }
 }
@@ -40,33 +56,39 @@ const inputsHandler = (event, mapping) => {
 export const startGPIOInterface = (host, callback) => {
   gpio.socket = new WebSocket(host);
 
-  gpio.socket.onerror = (e) => {
-    log("> remote gpio error", e);
-  }
+  gpio.socket.onclose = (e) => {
+    log("> remote gpio connecting error", e);
+    callback(false);
+  };
 
   gpio.socket.onopen = (event) => {
     log("> remote gpio connected", host);
+
+    gpio.socket.onclose = null;
     callback(true)
-  }
+  };
 };
 
 export const mapGPIOtoInputs = () => {
   log(">> mapGPIOtoInputs");
 
-  gpio.mapping = storage.getObject('mapping');
+  gpio.mapping = app.config.mapping;
   gpio.socket.onmessage = inputsHandler;
+  gpio.socket.onclose = (e) => dispatchError(1001);
 }
 
 export const rawGPIOListener = (callback) => {
   log(">> rawGPIOListener");
 
   gpio.socket.onmessage = (e) => callback(e.data);
+  gpio.socket.onclose = (e) => callback('error');
 }
 
 export const removeGPIOListeners = () => {
   log(">> removeGPIOListeners");
 
   gpio.socket.onmessage = null;
+  gpio.socket.onclose = null;
 }
 
 export const setGPIOInterface = () => {
@@ -75,31 +97,33 @@ export const setGPIOInterface = () => {
   gpio.send = {
 
     raw: (str) => {
-      sendDataToGPIO(str);
+      return sendDataToGPIO(str);
     },
 
     setCoinerState: (active) => {
-      sendDataToGPIO('C:' + ((active == true) ? 1 : 0));
+      return sendDataToGPIO('C:' + ((active == true) ? 1 : 0));
     },
 
     hopperReleaseCoins: (coins) => {
-      sendDataToGPIO('H:' + coins);
+      return sendDataToGPIO('H:' + coins);
     },
 
     disableAll: () => {
-      sendDataToGPIO('C:0');
-      gpio.send.lightsOff();
+      return sendDataToGPIO('C:0')
+        .then(() => gpio.send.lightsOff())
     },
 
     lightsOff: () => {
-      sendDataToGPIO('L:0,0,0,0$1');
-      sendDataToGPIO('B:0000000000000000,0$1');
+      runsequencial(100,
+        () => sendDataToGPIO('L:0,0,0,0$1'),
+        () => sendDataToGPIO('B:0000000000000000,0$1')
+      );
     },
 
     ledstripAnimation: (sequences, times=0) => {
       if (debugLevel == 1) return;
       const seqstr = sequences.map((seq) => seq.join(',')).join('#');
-      sendDataToGPIO('L:'+seqstr+'$'+times);
+      return sendDataToGPIO('L:'+seqstr+'$'+times);
     },
 
     keyledAnimation: (sequences, times=0) => {
@@ -111,11 +135,10 @@ export const setGPIOInterface = () => {
         seq[0].forEach((m, i) => {
           tmparr[gpio.mapping[i]] = m;
         });
-
         return tmparr.join('')+'00,'+seq[1];
       }).join('#');
 
-      sendDataToGPIO('B:'+seqstr+'$'+times);
+      return sendDataToGPIO('B:'+seqstr+'$'+times);
     },
 
     foo: null

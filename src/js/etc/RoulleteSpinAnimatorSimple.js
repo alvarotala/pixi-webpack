@@ -12,6 +12,11 @@ import * as particles from 'pixi-particles'
 import { animations } from './gpio_animations.js'
 
 
+// TODO: el tiempo de la jugada debe influir enn el resultado
+// si el jugador tarda mucho vs tarda poco..
+// la maquina deberia medir ese tiempo y calcular que accion tomar
+// si pagar o cobrar..
+
 export default class RoulleteSpinAnimatorSimple {
 
   constructor() {
@@ -74,6 +79,7 @@ export default class RoulleteSpinAnimatorSimple {
   }
 
   update() {
+    if (currentContext != 'playing') return;
     this.roullete.current++;
     if (this.roullete.current >= this.roullete.tiles.length)
       this.roullete.current = 0;
@@ -119,6 +125,7 @@ export default class RoulleteSpinAnimatorSimple {
   }
 
   async complete() {
+    if (currentContext != 'playing') return;
     const cursor  = this.roullete.current;
     const current = this.roullete.tiles[cursor];
 

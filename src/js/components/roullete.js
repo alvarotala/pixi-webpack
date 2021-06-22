@@ -92,6 +92,10 @@ export default class RoulleteComponent {
     return (distance + from) % this.tiles.length;
   }
 
+  isDismissed() {
+    return this.container.alpha == 0;
+  }
+
   animateDismiss() {
     this.animateScale(0.2, -160, 0, 0.5);
   }

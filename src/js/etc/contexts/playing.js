@@ -1,6 +1,15 @@
 import config from '../../config.js'
 
-import { log, next, pause, playSound } from '../../core/utils.js'
+import {
+  log,
+  next,
+  pause,
+  playSound,
+  setHandledTimeout,
+  setHandledInterval,
+  clearHandledInterval,
+  clearHandledTimeout
+} from '../../core/utils.js'
 
 import RoulleteSpinAnimatorSimple from '../RoulleteSpinAnimatorSimple.js';
 import { setContext } from '../../core/contexts.js'
@@ -23,15 +32,16 @@ const startActivityInterval = () => {
   if (activityIntervalRef != null) return;
 
   if (activityTimeoutRef != null) {
-    clearTimeout(activityTimeoutRef);
+    clearHandledTimeout(activityTimeoutRef);
     activityTimeoutRef = null;
   }
 
   // ignore if in debug mode..
   if (debugLevel == 1) return;
+  if (currentContext != 'playing') return;
 
-  activityIntervalRef = setInterval(() => {
-    var foundedActivity = false;
+  activityIntervalRef = setHandledInterval(() => {
+    let foundedActivity = false;
 
     // check for winnings to pay..
     if (ui.components.score.fields.wins.value > 0) foundedActivity = true;
@@ -46,22 +56,22 @@ const startActivityInterval = () => {
     if (foundedActivity) return;
 
     // no activity, stop interval..
-    clearInterval(activityIntervalRef);
+    clearHandledInterval(activityIntervalRef);
     activityIntervalRef = null;
 
     // start timeout callback..
-    activityTimeoutRef = setTimeout(gotoIdleContext, config.idle_timeout * 1000);
+    activityTimeoutRef = setHandledTimeout(gotoIdleContext, config.idle_timeout * 1000);
   }, 5000);
 }
 
 const cancelActivityTimeout = () => {
   if (activityTimeoutRef != null) {
-    clearTimeout(activityTimeoutRef);
+    clearHandledTimeout(activityTimeoutRef);
     activityTimeoutRef = null;
   }
 
   if (activityIntervalRef != null) {
-    clearInterval(activityIntervalRef);
+    clearHandledInterval(activityIntervalRef);
     activityIntervalRef = null;
   }
 };
@@ -78,7 +88,7 @@ const gotoIdleContext = async () => {
   setContext('idle');
 };
 
-const updateState = () => {
+const updateState = async () => {
   const keys = [0,0,0, 0,0,0, 0,0,0,0,0,0,0,0];
 
   if (spining) {
@@ -112,10 +122,12 @@ const updateState = () => {
   }
 
   if (keys.reduce((a, b) => (a + b), 0) == 0) {
+    await pause(100)
     gpio.send.keyledAnimation(animations.keyled.waiting());
     return;
   }
 
+  await pause(100)
   gpio.send.keyledAnimation(animations.keyled.keyboard(keys));
 }
 
@@ -223,6 +235,9 @@ const spin = async () => {
   const animator = new RoulleteSpinAnimatorSimple();
   await animator.run(steps);
 
+  // if context error, do nothing..
+  if (currentContext != 'playing') return;
+  
   next(500, () => spincompleted(pay));
 };
 

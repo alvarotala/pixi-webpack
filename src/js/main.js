@@ -1,6 +1,17 @@
+
+// check enviroment level..
+global.debugLevel = 0;
+
+if(window.location.search == '?1') debugLevel = 1;
+if(window.location.search == '?2') debugLevel = 2;
+
+console.log("***** global.debugLevel", global.debugLevel);
+
 import * as PIXI from 'pixi.js'
-import config, { game } from './config.js'
+
+import config from './config.js'
 import storage from './core/storage.js'
+
 
 // check raspi temp
 // cat /sys/class/thermal/thermal_zone0/temp
@@ -15,7 +26,10 @@ PIXI.settings.STRICT_TEXTURE_CACHE = false;
 PIXI.settings.GC_MAX_IDLE = 20000; // 3600
 PIXI.settings.GC_MAX_CHECK_COUNT = 2000; // 600
 PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
-PIXI.settings.PREFER_ENV = PIXI.ENV.WEBGL_LEGACY; // PIXI.ENV.WEBGL2;
+
+PIXI.settings.PREFER_ENV = PIXI.ENV.WEBGL_LEGACY;
+// PIXI.settings.PREFER_ENV = PIXI.ENV.WEBGL2;
+
 PIXI.settings.SORTABLE_CHILDREN = false;
 PIXI.settings.SPRITE_BATCH_SIZE = 2048; // 4096;
 PIXI.settings.TARGET_FPMS = 0.03; // 0.06
@@ -65,13 +79,15 @@ app.ticker = {
   add: (delegate) => {
     if (!tickers.includes(delegate))
       tickers.push(delegate);
-    log("Tickers: " + tickers.length);
   },
 
   remove: (delegate) => {
     if (tickers.includes(delegate))
       tickers.splice(tickers.indexOf(delegate), 1);
-    log("Tickers: " + tickers.length);
+  },
+
+  clear: () => {
+    tickers.splice(0, tickers.length);
   },
 
   animate: (timestamp) => {
@@ -99,16 +115,13 @@ app.ticker = {
 
 global.ui = null;
 global.gpio = {};
-global.debugLevel = 0;
 
-if(window.location.search == '?1') debugLevel = 1;
-if(window.location.search == '?2') debugLevel = 2;
-
-import { log } from './core/utils.js'
-
-import { startGPIOInterface, mapGPIOtoInputs, setGPIOInterface } from './core/cfgpio.js'
+import { setGPIOInterface } from './core/cfgpio.js'
 import { inputsWithKeyboard } from './core/keyboard.js' // add keyboard support
 import { bootloader } from './core/bootloader.js'
+import { log, file, set_basepath, promise } from './core/utils.js'
+
+set_basepath((debugLevel == 0) ? config.base_path : config.debug_base_path);
 
 
 // log(PIXI.settings);
@@ -120,29 +133,23 @@ import { bootloader } from './core/bootloader.js'
 import './core/contexts.js'
 import UIManager from './ui.js'
 
-const loadGameEngine = () => {
+const loadGameEngine = async () => {
   log("-- game engine started --");
+
+  file.audit("GE:INI");
 
   ui = new UIManager();
   app.stage.addChild(ui.view);
 
-  ui.load();
+  await ui.load();
 }
 
-const boot = (host) => {
-  startGPIOInterface(host, (success) => {
-    if (success) return bootloader(loadGameEngine);
-
-    // TODO: check errors and pause machine..
-    log('Error initializing gpio device');
-  });
-};
 
 (function() {
   log('-- starting --');
 
   setGPIOInterface();
-  app.ticker.start()
+  app.ticker.start();
 
   if (debugLevel > 0) {
     log('-- debug mode --');
@@ -153,7 +160,7 @@ const boot = (host) => {
     if (debugLevel == 2) {
       log('-- gpio mapped to remote --');
 
-      boot(config.cfgpio_remote_debug);
+      bootloader(config.cfgpio_remote_debug, loadGameEngine);
       return 0;
     }
 
@@ -161,7 +168,7 @@ const boot = (host) => {
     return 0;
   }
 
-  boot(config.cfgpio_url);
+  bootloader(config.cfgpio_url, loadGameEngine);
 })();
 
 

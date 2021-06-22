@@ -7,7 +7,7 @@ import Easing from '../etc/easing.js'
 
 import { SimpleText } from '../etc/TextField.js'
 
-import { log, next, pause } from '../core/utils.js'
+import { log, next, pause, setHandledTimeout } from '../core/utils.js'
 
 export default class JackpotComponent {
 
@@ -155,16 +155,7 @@ export default class JackpotComponent {
     for (let i=0, n=this.wheels.length; i < n; ++i) {
       const wheel = this.wheels[i];
 
-      // next(i * 144, wheel.play.bind(wheel));
-
-      setTimeout(() => wheel.play(), i * 144);
-
-      // FOR DEV: test start equal spinning
-      // wheel.play();
-      //
-      // setTimeout(() => {
-      //   console.log("PLAYYYYYYYY", i);
-      // }, i * 144);
+      setHandledTimeout(() => wheel.play(), i * 144);
     }
 
     app.ticker.add(this.enterLoopAnimation, this);

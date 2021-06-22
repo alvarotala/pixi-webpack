@@ -3,11 +3,19 @@ const config = {
   width   : 720,
   height  : 1280,
 
-  master_volume: 0.3, /// 0.2
+  master_volume: 0, /// 0.2
 
   idle_timeout: 10, /// seconds
 
-  path_assets : 'assets',
+  bonus_rate: 85, // 85, // % no winnings.. this is the probability "the house" have..
+
+  path_assets : './assets',
+
+  base_path: '/home/alvarotala/cfdata',
+  debug_base_path: '/Users/alvaro/Desktop/cfdata',
+
+  cfgpio_url: 'ws://127.0.0.1:8080',
+  cfgpio_remote_debug: 'ws://192.168.100.90:8080',
 
   bets_tiles_textures: [
     'bar',        /// 0
@@ -49,9 +57,6 @@ const config = {
 
 
   multipliers: {big: [30, 20, 10], small: [15, 10, 5]},
-
-  cfgpio_url: 'ws://127.0.0.1:8080',
-  cfgpio_remote_debug: 'ws://192.168.100.90:8080',
 
   foo: null
 }

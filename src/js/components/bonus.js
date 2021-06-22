@@ -9,9 +9,14 @@ import { AnimatedNumberField } from '../etc/TextField.js'
 export default class BonusComponent {
 
   constructor() {
-    this.speed = 0.02;
-    this.isplaying = -1;
+    this.speed = 0;
+    this.isplaying = false;
     this.segments = 8;
+
+    this.speedlimit = 0.5;
+    this.accrate = 0.01; // 0.015;
+    this.desrate = 0.001;
+    this.stopdelta = 0.001;
 
     this.load();
   }
@@ -21,6 +26,8 @@ export default class BonusComponent {
     this.loader
       .add('bonus_roullete', config.path_assets + '/images/bonus_roullete.png')
       .add('bonus_roullete_center', config.path_assets + '/images/bonus_roullete_center.png')
+      .add('bonus_roullete_tick', config.path_assets + '/images/bonus_roullete_tick.png')
+
       .load(this.build.bind(this))
   }
 
@@ -61,6 +68,16 @@ export default class BonusComponent {
     this.container.addChild(center);
 
 
+    this.tick = new PIXI.Sprite(res.bonus_roullete_tick.texture);
+    this.tick.anchor.set(0.5);
+
+    this.tick.x = this.roullete.x;
+    this.tick.y = this.roullete.y - 236; // 290, 280
+
+    this.tick.alpha = 0;
+    this.container.addChild(this.tick);
+
+
     this.field = new AnimatedNumberField(120, 60, '0');
     this.field.y = 400;
     this.field.x = (config.width / 2);
@@ -70,39 +87,13 @@ export default class BonusComponent {
     this.container.addChild(this.field);
   }
 
-  // 0 => purple
-  // 1 => yellow
-
-  getRoulleteResult() {
-    const angle = (this.roullete.rotation * 180/Math.PI) % 360;
-    // console.log("A: ", angle / (360 / this.segments));
-    return Math.floor(angle / (360 / this.segments)) % 2;
-  }
-
-  enterLoopAnimation() {
-    if (this.speed > 0) {
-      this.roullete.rotation += this.speed;
-    }
-
-    if (this.isplaying >= 0) {
-      // add friction..
-      this.speed-=0.0003;
-
-      if (this.speed < 0.001) {
-        this.completed();
-      }
-    }
-  }
-
-  animateShow(params) {
+  animateShow() {
     if(this.container.visible) return;
     this.container.alpha = 0;
     this.container.visible = true;
 
     // NOTE: memory leak fix?
     ui.view.addChild(this.container);
-
-    this.amount = params.amount;
 
     this.field.y = 400;
     this.field.setText(this.amount);
@@ -152,41 +143,95 @@ export default class BonusComponent {
     actions.play();
   }
 
-  play(section, oncomplete) {
-    if (this.isplaying >= 0) return;
-    this.oncomplete = oncomplete;
-    this.isplaying = section;
 
-    // this.speed = 0.3; // 0.3011; // 0.05
-    // this.speed = 0.28 + (Math.random() * 0.1);
-    this.speed = 0.27 + ((Math.random() * 2) * 0.01);
-    // console.log(">>>> ", this.getRoulleteResult(), this.speed);
-
-    const actions = Actions.parallel(
-      Actions.scaleTo(this.roullete, 1, 1, 0.9, Easing.easeInQuad),
-      Actions.moveTo(this.field, this.field.x, 200, 0.5, Easing.easeInQuad)
-    );
-
-    actions.play();
+  getRoulletePosition(rotation) {
+    const angle = (rotation * 180/Math.PI) % 360;
+    return angle / (360 / this.segments);
   }
 
-  completed() {
-    const playing = this.isplaying;
-    this.isplaying = -1;
-    this.speed = 0;
+  // 0 => purple
+  // 1 => yellow
 
-    const result = this.getRoulleteResult();
+  getRoulleteResult() {
+    return Math.floor(this.getRoulletePosition(this.roullete.rotation)) % 2;
+  }
 
-    // winner winner chicken dinner
-    if (result == playing) {
-      this.amount*=2;
-      this.field.setText(this.amount);
-      this.oncomplete();
-      return;
+
+  getSpeedWithTargetFromCurrentRotation(target) {
+    while (true)  { // tries
+      // let setspeed = (Math.random() * 0.1) + (this.speedlimit - 0.1);
+      let setspeed = Math.random() * 0.1;
+
+      let tmpspeed = setspeed;
+      let rotation = this.roullete.rotation;
+      let decelerating = false;
+
+      while (true) { // animation frames..
+        rotation+=tmpspeed;
+
+        if (tmpspeed < this.speedlimit && decelerating != true) {
+          tmpspeed = Math.min(this.speedlimit, tmpspeed + this.accrate); // 0.03
+          continue; // accelerate
+        }
+
+        decelerating = true;
+        tmpspeed-=this.desrate; // decelerate
+
+        if (tmpspeed < this.stopdelta) {
+          const result = Math.floor(this.getRoulletePosition(rotation)) % 2;
+          if (result != target) break;
+          return setspeed;
+        }
+      }
+    }
+  }
+
+
+  play(target, oncomplete) {
+    if (this.isplaying) return;
+    this.isplaying = true;
+
+    this.oncomplete = oncomplete;
+
+    this.decelerating = false;
+    this.brakes = null;
+    this.speed = this.getSpeedWithTargetFromCurrentRotation(target);
+
+    if (this.roullete.scale.x < 1) {
+      Actions.parallel(
+        Actions.scaleTo(this.roullete, 1, 1, 0.9, Easing.easeInQuad),
+        Actions.moveTo(this.field, this.field.x, 200, 0.5, Easing.easeInQuad),
+        Actions.fadeTo(this.tick, 1.0, 1.2, Easing.easeInQuad)
+      ).play();
+    }
+  }
+
+
+  enterLoopAnimation() {
+    if (this.brakes == true) return;
+    if (this.speed > 0) {
+      this.roullete.rotation+=this.speed;
     }
 
-    this.amount = 0; // lose all
-    this.oncomplete();
+    if (this.isplaying) {
+
+      if (this.speed < this.speedlimit && this.decelerating != true) {
+        this.speed = Math.min(this.speedlimit, this.speed + this.accrate);
+        return // accelerate
+      }
+
+      this.decelerating = true;
+      this.speed-=this.desrate; // 0.0003
+
+      if (this.speed < this.stopdelta) {  // stop
+        this.brakes = true;
+        this.decelerating = false;
+        this.isplaying = false;
+        this.speed = 0;
+
+        this.oncomplete(this.getRoulleteResult());
+      }
+    }
   }
 
 }

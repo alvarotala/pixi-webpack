@@ -4,8 +4,7 @@ import config from './config.js'
 import { Actions } from 'pixi-actions';
 
 import { setContext } from './core/contexts.js'
-import storage from './core/storage.js'
-import { playSound } from './core/utils.js'
+import { promise, playSound, clearAllTasks, next } from './core/utils.js'
 
 
 import './etc/contexts_descriptor.js'
@@ -21,6 +20,9 @@ import BonusComponent from './components/bonus.js'
 
 import { sound } from '@pixi/sound';
 
+
+const actionsticker = (delta) => Actions.tick(delta*0.005);
+
 export default class UIManager {
 
   constructor() {
@@ -31,20 +33,21 @@ export default class UIManager {
     this.view.width   = config.width;
     this.view.height  = config.height;
 
-    const screen = storage.getObject('screen');
-    if (screen) {
-      this.view.x = screen.x;
-      this.view.y = screen.y;
-      this.view.scale.set(screen.scale, screen.scale);
+    if (app.config) {
+      this.view.x = app.config.screen.x;
+      this.view.y = app.config.screen.y;
+      this.view.scale.set(app.config.screen.scale, app.config.screen.scale);
     }
   }
 
-  load() {
+  async load() {
     PIXI.Loader.shared
 
       // Sprites
       .add('logo', config.path_assets + '/images/logo.png')
       .add('background', config.path_assets + '/images/background.png')
+      .add('errorscreen', config.path_assets + '/images/errorscreen.png')
+
       .add('tile', config.path_assets + '/images/tile.png')
       .add('tile_hover', config.path_assets + '/images/tile_hover.png')
       .add('betsbg', config.path_assets + '/images/betsbg.png')
@@ -77,8 +80,12 @@ export default class UIManager {
 
       .add('bonusintro', config.path_assets + '/audios/mixkit-arcade-bonus-229.wav')
 
-
-      .load(this.build.bind(this))
+    return await promise((resolve) => {
+      PIXI.Loader.shared.load((loader, resources) => {
+        this.build(loader, resources);
+        resolve(true);
+      });
+    });
   }
 
   build(loader, resources) {
@@ -95,9 +102,17 @@ export default class UIManager {
     // TODO: Jackpot
     // this.components.jackpot       = new JackpotComponent();
 
-    app.ticker.add((delta) => Actions.tick(delta*0.005));
+    app.ticker.add(actionsticker);
 
-    setContext('idle');
+    next(1000, () => setContext('bonus', {amount: 5}));
+
+    // setContext('idle');
+    // setContext('error');
+  }
+
+  stopAll() {
+    app.ticker.clear();
+    clearAllTasks();
   }
 
 }

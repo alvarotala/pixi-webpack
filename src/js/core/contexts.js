@@ -11,6 +11,7 @@ export const setContextsDescriptor = (descriptor) => {
 
 export const setContext = (name, params = null) => {
   if (contextsDescriptor == null) return;
+  if (currentContext == 'error') return;
 
   if (currentContext != null) {
     const ctx = contextsDescriptor[currentContext];
@@ -21,8 +22,15 @@ export const setContext = (name, params = null) => {
   currentContext = name;
 
   log("> current context:", name);
-  gpio.send.setCoinerState(context.coineractive);
 
+  gpio.send.setCoinerState(context.coineractive);
   context.init(params);
-  setInputListener(context.inputs);
+
+  if (context.inputs) {
+    setInputListener(context.inputs);
+  }
+};
+
+export const dispatchError = (code, data = {}) => {
+  setContext('error', {code: code, data: data});
 };
