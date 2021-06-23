@@ -10,13 +10,15 @@ import { startGPIOInterface, mapGPIOtoInputs, rawGPIOListener, mapsetup, removeG
 config.autostart_interrupts = 4;
 config.settings_pin_length = 6;
 config.settings_pin = '446544';
-config.autostart_timeout = 1; // seconds
+config.autostart_timeout = 5; // seconds
 
 let terminal = new Terminal();
 
 class Bootloader {
 
   boot() {
+    terminal.append('-> Iniciando...');
+
     startGPIOInterface(this.cfgpio_url, (success) => {
       if (!success) {
         terminal.clear();
@@ -91,7 +93,6 @@ class Bootloader {
         clearInterval(this.autostart_interval);
         this.autostart_interval = null;
 
-        file.audit("BL:INI");
         this.settings_auth();
       }
     });
@@ -131,12 +132,12 @@ class Bootloader {
           if (settings_auth_pin.join('') == config.settings_pin) {
             terminal.append("-> Acceso autorizado..");
 
-            file.audit("BL:AUTH:1");
+            file.audit('ADM', 'AUT', 'SCC');
             next(500, this.settings_main.bind(this));
             return;
           }
 
-          file.audit("BL:AUTH:0");
+          file.audit('ADM', 'AUT', 'ERR');
           terminal.append("-> Acceso denegado.");
           next(1000, this.start_game.bind(this));
         });
@@ -325,7 +326,7 @@ class Bootloader {
     terminal.append('> Enviando datos, aguarde un momento...');
     await pause(2000);
 
-    file.audit("BL:CNFS"); // config saved
+    file.audit('ADM', 'CNFSET'); // config saved
 
     storage.set('installed', 'yes');
     terminal.append('>> Datos guardados exitosamente.');

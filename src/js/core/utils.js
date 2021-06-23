@@ -150,10 +150,12 @@ export const file = {
     file.writejson(counters_path, data);
   },
 
-  audit: (data) => {
+  audit: (...args) => {
     if (!window.electron) return;
-    const line = Date.now() +':'+ data +'\r\n';
-    window.electron.file.write(audit_path, line, {flag: 'a'});
+    if (args == null) args = ['ERR', 708];
+    args.unshift(Date.now())
+    args.push('\r\n')
+    window.electron.file.write(audit_path, args.join(':'), {flag: 'a'});
   },
 
   setberror: (code, data) => {

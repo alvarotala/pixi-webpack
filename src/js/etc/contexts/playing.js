@@ -2,6 +2,7 @@ import config from '../../config.js'
 
 import {
   log,
+  file,
   next,
   pause,
   playSound,
@@ -16,14 +17,6 @@ import { setContext } from '../../core/contexts.js'
 
 import { animations } from '../gpio_animations.js'
 
-
-const audit = {
-
-  roullete: {
-    spins: 0
-  }
-
-}
 
 let activityTimeoutRef = null;
 let activityIntervalRef = null;
@@ -195,12 +188,12 @@ const spin = async () => {
 
   console.log(cases);
 
-  let num =  Math.floor(Math.random() * config.roullete_tiles.length);
-  const totalbets = ui.components.bets.total();
+  let num =  Math.floor(Math.random() * len);
 
-  const a = Math.random() < 0.8 ? false : true;
+
+  const totalbets = ui.components.bets.total();
+  const a = Math.random() < 0.6 ? false : true;
   if (a == true) {
-    num = Math.floor(Math.random() * len); // true random..
     console.log(">>>>> TRUE random");
   }
   else {
@@ -253,7 +246,10 @@ const spin = async () => {
   const steps = ((2 + Math.floor(Math.random() * 2)) * len) + num;
 
   spining = true;
-  audit.roullete.spins++;
+
+  const csf = ui.components.score.fields;
+  const betsva = ui.components.bets.getValues().join(',')
+  file.audit('GAME', 'SPIN', ref, pay, totalbets, betsva, csf.credits.value, csf.wins.value);
 
   ui.components.bets.updateLastValues()
   ui.components.bets.animatePlaySelecteds()
@@ -287,6 +283,8 @@ const spincompleted = (pay) => {
 
   gpio.send.ledstripAnimation(animations.ledstrip.playing_default());
 
+  file.audit('GAME', 'SPINCOMP');
+
   // TODO: Jackpot
   // if (selected.jackpot != undefined) {
   //   setContext('jackpot', {mode: selected.jackpot});
@@ -296,6 +294,7 @@ const spincompleted = (pay) => {
   // Workaround: instead of Jackpot, users get a "free spin"..
   if (selected.jackpot != undefined) {
     playSound('roulletelucky');
+    file.audit('GAME', 'FREESP');
     updateState();
     return; // nothing happens.. just a free spin
   }
@@ -378,6 +377,9 @@ export const ContextPlaying = {
         gpio.send.hopperReleaseCoins(1);
         return;
       }
+
+      const csf = ui.components.score.fields;
+      file.audit('GAME', 'PAYOUT', csf.credits.value, num);
 
       ui.components.score.resetField('wins');
       gpio.send.hopperReleaseCoins(num);

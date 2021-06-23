@@ -52,6 +52,14 @@ const playWithSelection = async (selection) => {
   isPlaying = true;
   currentSelection = selection;
 
+  const num = Math.random() < (config.bonus_rate * 0.01) ? 1 : 0; // 1 = user loss, 0 = user wins
+  const target = Math.abs(selection - num);
+
+
+  const cbonus = ui.components.bonus;
+  const csf = ui.components.score.fields;
+  file.audit('GAME', 'BONUS', selection, target, cbonus.amount, csf.credits.value, csf.wins.value);
+
   if (!ui.components.roullete.isDismissed())
     ui.components.roullete.animateDismiss();
 
@@ -67,9 +75,6 @@ const playWithSelection = async (selection) => {
 
   ui.components.score.animateDismiss();
   await pause(300);
-
-  const num = Math.random() < (config.bonus_rate * 0.01) ? 1 : 0; // 1 = user loss, 0 = user wins
-  const target = Math.abs(selection - num);
 
   ui.components.bonus.play(target, completed);
 };

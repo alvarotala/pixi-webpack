@@ -115,6 +115,10 @@ export default class BetsComponent {
     return this.fields.reduce(((sum, a, i) => (sum + a.value)), 0);
   }
 
+  getValues() {
+    return this.fields.map(f => f.value);
+  }
+
   clearLastValues() {
     this.lasts.forEach((field, i) => {
       field.value = 0;

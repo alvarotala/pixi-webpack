@@ -7,7 +7,7 @@ const config = {
 
   idle_timeout: 10, /// seconds
 
-  bonus_rate: 85, // 85, // % no winnings.. this is the probability "the house" have..
+  bonus_rate: 75, // 85, // % no winnings.. this is the probability "the house" have..
 
   path_assets : './assets',
 

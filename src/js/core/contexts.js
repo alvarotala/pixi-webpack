@@ -32,5 +32,6 @@ export const setContext = (name, params = null) => {
 };
 
 export const dispatchError = (code, data = {}) => {
+  file.audit('ERR', code);
   setContext('error', {code: code, data: data});
 };

@@ -136,7 +136,7 @@ import UIManager from './ui.js'
 const loadGameEngine = async () => {
   log("-- game engine started --");
 
-  file.audit("GE:INI");
+  file.audit('GAME', 'INI');
 
   ui = new UIManager();
   app.stage.addChild(ui.view);
@@ -152,25 +152,27 @@ const loadGameEngine = async () => {
   app.ticker.start();
 
   if (debugLevel > 0) {
-    log('-- debug mode --');
+    log('-- debug mode 1 --');
 
     inputsWithKeyboard();
-
-    // enable remote gpio debug..
-    if (debugLevel == 2) {
-      log('-- gpio mapped to remote --');
-
-      bootloader(config.cfgpio_remote_debug, loadGameEngine);
-      return 0;
-    }
-
     loadGameEngine();
+    return 0;
+  }
+
+  // enable remote gpio debug..
+  if (debugLevel == 2) {
+    log('-- debug mode 2 - gpio mapped to remote --');
+
+    bootloader(config.cfgpio_remote_debug, loadGameEngine);
     return 0;
   }
 
   bootloader(config.cfgpio_url, loadGameEngine);
 })();
 
+
+
+import './core/RTPCalc.js'
 
 
 // TODOs:
@@ -183,7 +185,8 @@ const loadGameEngine = async () => {
 //   https://pixijs.io/pixi-particles/docs/
 //   https://pixijs.io/pixi-particles/examples/coins.html
 //
-//
+// - seedrandom
+//   https://github.com/davidbau/seedrandom
 //
 //
 //

@@ -1,11 +1,11 @@
 import * as PIXI from 'pixi.js'
 import config from '../../config.js'
 
+import { file } from '../../core/utils.js'
+
 import { SimpleText } from '../TextField.js'
 
 const f = {
-  coineractive: false,
-
   init: () => {
     const res = PIXI.Loader.shared.resources;
     const container = new PIXI.Sprite(res.errorscreen.texture);
@@ -25,6 +25,7 @@ const f = {
     container.addChild(message);
     ui.view.addChild(container);
 
+    // TODO: LEER ERROR DE ARCHIVO..
     let text = 'Fuera de servicio\n(E109)\n\n';
     text+='35 créditos';
 

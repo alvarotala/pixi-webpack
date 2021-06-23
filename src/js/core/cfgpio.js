@@ -44,9 +44,10 @@ const inputsHandler = (event) => {
       const value = getmapkeyname(parseInt(data[0]));
       if (value != null && value != undefined && value.length > 1) {
         dispatch(...value.split(":"));
-      } 
+      }
       break;
     case "C":
+      file.audit('COIN', 'ADD', parseInt(data[0]));
       dispatch('addcoins', parseInt(data[0]));
       break;
     case "E":
