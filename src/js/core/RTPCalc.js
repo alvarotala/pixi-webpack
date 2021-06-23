@@ -1,4 +1,6 @@
 import config from '../config.js'
+const seedrandom = require('seedrandom');
+const srandom = seedrandom();
 
 const f = {
 
@@ -19,11 +21,27 @@ const f = {
     let current   = 0;
 
     let i = 0;
-    while(i < 100000000) { // Play spin.. 100 millones -> 100000000
+    while(i < 1000000) { // Play spin.. 100 millones -> 100000000
       const bets = f.getrandombets(8, maxplaces, maxbet);
-      const btotal = f.totalbets(bets);
-      // const bets = {total: 4, values: [1,0,0,0,0,1,1,1]};
 
+      // const bets = [1,1,1,1,1,1,1,1];
+
+      // const patterns = [
+      //   [0,0,1,1,0,1,1,1],
+      //   [0,1,1,1,0,1,0,1],
+      //   [1,1,1,0,0,1,1,1],
+      //   [1,1,1,1,1,1,1,1],
+      //   [1,0,0,0,0,0,0,0],
+      //   [0,0,0,0,0,0,0,1],
+      //   [0,0,0,0,0,0,1,1],
+      //   [0,0,0,0,0,1,1,1],
+      //   [1,2,0,0,0,0,0,0],
+      // ];
+
+      // const bets = patterns[i%patterns.length];
+
+
+      const btotal = f.totalbets(bets);
       const steps  = algorithm(current, bets, btotal); // steps
 
       const pos = f.poswithdistance(current, steps);
@@ -55,7 +73,7 @@ const f = {
     const t = Math.ceil(Math.random() * maxplaces);
     const bets = new Array(total).fill(0)
     for (let p=0; p<t; p++) {
-      bets.fill(Math.ceil(Math.random() * maxbet), p, 1);
+      bets[p] = Math.ceil(Math.random() * maxbet);
     }
 
     return bets.shuffle();
@@ -70,6 +88,7 @@ const f = {
   },
 
   getpoints: (tile, bets, steps) => {
+    if (tile.jackpot !== undefined) return 0;
     let points = tile.points;
     if (tile.multiplier != undefined) {
       points*= f.getmultiplier(steps, tile.multiplier);
@@ -116,17 +135,19 @@ const f = {
       const cases = f.simulatecases(from, bets);
       let num = 0;
 
-      if (Math.random() >= 0.41) {
+      const randomf = srandom; // Math.random()
+
+      if (randomf() >= 0.41) { // magic number...
         const indexes = [];
         cases.forEach((c, i) => {
           if (c <= total) indexes.push(i);
         });
 
-        const sel = Math.floor(Math.random() * indexes.length);
+        const sel = Math.floor(randomf() * indexes.length);
         num = indexes[sel];
       }
       else {
-        num = Math.floor(Math.random() * f.len);
+        num = Math.floor(randomf() * f.len);
       }
 
       return num;
@@ -153,13 +174,4 @@ f.setup();
 global.RTPCalc = f;
 
 
-RTPCalc.simulate(f.algorithms.test1, 8, 1);
-
-
-
-/*
-
-2, 1 =>
-
-
-*/
+// RTPCalc.simulate(f.algorithms.test1, 8, 5);

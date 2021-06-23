@@ -1,5 +1,5 @@
 import { setInputListener } from '../core/inputs.js'
-import { log } from '../core/utils.js'
+import { log, file } from '../core/utils.js'
 
 global.context = null;
 global.currentContext = null;

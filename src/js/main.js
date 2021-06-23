@@ -136,7 +136,8 @@ import UIManager from './ui.js'
 const loadGameEngine = async () => {
   log("-- game engine started --");
 
-  file.audit('GAME', 'INI');
+  if (debugLevel == 0)
+    file.audit('GAME', 'INI');
 
   ui = new UIManager();
   app.stage.addChild(ui.view);

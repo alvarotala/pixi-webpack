@@ -1,6 +1,6 @@
 import config from '../../config.js'
 
-import { log, next, pause, playSound, runsequencial } from '../../core/utils.js'
+import { log, file, next, pause, playSound, runsequencial } from '../../core/utils.js'
 import { setContext } from '../../core/contexts.js'
 
 import { animations } from '../gpio_animations.js'
