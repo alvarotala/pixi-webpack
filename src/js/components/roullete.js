@@ -87,11 +87,7 @@ export default class RoulleteComponent {
     }
 
   }
-
-  simulate(from, distance) {
-    return (distance + from) % this.tiles.length;
-  }
-
+  
   isDismissed() {
     return this.container.alpha == 0;
   }

@@ -311,12 +311,6 @@ class MultipliersBar extends PIXI.Container {
     return this.data[this.keys[i]];
   }
 
-  simulate(dist, k) {
-    const m = this.data[k];
-    const i = dist % m.values.length;
-    return m.values[i];
-  }
-
   reset() {
     for (let i=0; i<this.keys.length; i++) {
       const data = this.dataAtIndex(i);
