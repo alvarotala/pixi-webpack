@@ -39,6 +39,8 @@ const inputsHandler = (event) => {
   const data = event.data.split(":")
   const key  = data.shift();
 
+  RTPCalc.addentropy(event.data);
+
   switch (key) {
     case "U":
       const value = getmapkeyname(parseInt(data[0]));

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>crazy fruits machines</title>
+    <style>
+      html,
+      body {
+        width: 720px;
+        height: 1280px;
+        padding: 0;
+        margin: 0;
+        overflow: hidden;
+        background: #000;
+      }
+
+      canvas {
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        position: absolute;
+      }
+
+      #controls {
+        position: absolute;
+        display: block;
+        top: 1260px;
+        left: 0;
+        background: #f0e807;
+        z-index: 1000;
+        width: 720px;
+      }
+
+      #controls ul {
+        width: 720px;
+        display: table;
+        list-style-type: none;
+        text-align: center;
+        margin: 0;
+        padding: 0;
+      }
+
+      #controls ul a {
+        text-decoration: none;
+      }
+
+      #controls ul li {
+        list-style: none;
+        display: block;
+        float: left;
+        margin: 0;
+        padding: 0;
+        height: 50px;
+        line-height: 30px;
+      }
+
+      #top li {
+        width: 16.6%;
+      }
+
+      #bottom li {
+        width: 12.5%;
+      }
+
+
+    </style>
+  </head>
+
+  <body>
+    <canvas id="scene"></canvas>
+    <div id="controls">
+      <ul id="top">
+        <li><a href="#" onclick="touchbar('pay')">Pagar</a></li>
+        <li><a href="#" onclick="touchbar('left')">&lt;</a></li>
+        <li><a href="#" onclick="touchbar('right')">&gt;</a></li>
+
+        <li><a href="#" onclick="touchbar('option')">Opcion</a></li>
+        <li><a href="#" onclick="touchbar('cancel')">Cancelar</a></li>
+        <li><a href="#" onclick="touchbar('play')">Jugar</a></li>
+      </ul>
+      <ul id="bottom">
+        <li><a href="#" onclick="touchbar('numpad:0')">BAR</a></li>
+        <li><a href="#" onclick="touchbar('numpad:1')">77</a></li>
+        <li><a href="#" onclick="touchbar('numpad:2')">Banana</a></li>
+        <li><a href="#" onclick="touchbar('numpad:3')">Sandia</a></li>
+        <li><a href="#" onclick="touchbar('numpad:4')">Frutilla</a></li>
+        <li><a href="#" onclick="touchbar('numpad:5')">Campana</a></li>
+        <li><a href="#" onclick="touchbar('numpad:6')">Uvas</a></li>
+        <li><a href="#" onclick="touchbar('numpad:7')">Naranja</a></li>
+      </ul>
+    </div>
+  </body>
+
+</html>

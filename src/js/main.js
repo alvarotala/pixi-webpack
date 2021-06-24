@@ -5,11 +5,30 @@ global.debugLevel = 0;
 if(window.location.search == '?1') debugLevel = 1;
 if(window.location.search == '?2') debugLevel = 2;
 
-console.log("***** global.debugLevel", global.debugLevel);
-
 import * as PIXI from 'pixi.js'
 
+
+
+// DEMO WEB ONLY!!!!
+// import { dispatch } from './core/inputs.js'
+// window.touchbar = (input) => {
+//   RTPCalc.addentropy(input);
+//
+//   const com = input.split(':')
+//   dispatch(com[0], (com.length > 1 ? com[1] : null));
+// };
+//
+// debugLevel = 1;
+// PIXI.settings.PREFER_ENV = PIXI.ENV.WEBGL2;// PIXI.settings.PREFER_ENV = PIXI.ENV.WEBGL2;
+
+
+
+console.log("***** global.debugLevel", global.debugLevel);
+
+
 import config from './config.js'
+import './core/prototypes.js'
+
 import storage from './core/storage.js'
 
 
@@ -36,6 +55,12 @@ PIXI.settings.TARGET_FPMS = 0.03; // 0.06
 
 // PIXI.settings.GC_MODE = PIXI.GC_MODES.MANUAL; // PIXI.GC_MODES.AUTO
 
+
+
+// log(PIXI.settings);
+// log("IsMobile:", PIXI.isMobile.any);
+
+
 /*
 global.app = new PIXI.Application({
   width: config.width,
@@ -58,7 +83,7 @@ global.app = new PIXI.Application({
 
 global.app = {};
 
-app.renderer = new PIXI.Renderer({ width: config.width, height: config.height, backgroundColor: 0x000000 });
+app.renderer = new PIXI.Renderer({ width: config.width, height: config.height, backgroundColor: 0x000000, legacy: true });
 document.body.appendChild(app.renderer.view);
 
 app.stage = new PIXI.Container();
@@ -124,14 +149,14 @@ import { log, file, set_basepath, promise } from './core/utils.js'
 set_basepath((debugLevel == 0) ? config.base_path : config.debug_base_path);
 
 
-// log(PIXI.settings);
-// log("IsMobile:", PIXI.isMobile.any);
+
 
 // load game
 // TODO: move specific game files to folder to make dynamic..
 
 import './core/contexts.js'
 import UIManager from './ui.js'
+
 
 const loadGameEngine = async () => {
   log("-- game engine started --");
@@ -152,20 +177,21 @@ const loadGameEngine = async () => {
   setGPIOInterface();
   app.ticker.start();
 
-  if (debugLevel > 0) {
+  if (debugLevel == 1) {
     log('-- debug mode 1 --');
 
     inputsWithKeyboard();
     loadGameEngine();
-    return 0;
+    return;
   }
 
   // enable remote gpio debug..
   if (debugLevel == 2) {
     log('-- debug mode 2 - gpio mapped to remote --');
 
+    inputsWithKeyboard();
     bootloader(config.cfgpio_remote_debug, loadGameEngine);
-    return 0;
+    return;
   }
 
   bootloader(config.cfgpio_url, loadGameEngine);

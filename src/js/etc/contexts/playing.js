@@ -151,17 +151,21 @@ const spin = async () => {
     ui.components.score.addAtField('credits', -ui.components.bets.total());
   }
 
+
   const len = config.roullete_tiles.length;
 
   const current = ui.components.roullete.current;
   const bets    = ui.components.bets.getValues();
   const btotal  = ui.components.bets.total();
 
-  const asteps  = RTPCalc.algorithms.test1(current, bets, btotal); // steps
-  const pos     = RTPCalc.poswithdistance(current, asteps);
+  // const asteps  = RTPCalc.r.algorithms.test1(current, bets, btotal); // steps
+
+  const asteps  = RTPCalc.r.algorithms.interpolate(current, bets, btotal); // steps
+
+  const pos     = RTPCalc.r.poswithdistance(current, asteps);
 
   const tile    = config.roullete_tiles[pos];
-  const pay     = RTPCalc.getpoints(tile, bets, asteps);
+  const pay     = RTPCalc.r.getpoints(tile, bets, asteps);
 
   // disable coiner
 
@@ -284,6 +288,18 @@ export const ContextPlaying = {
     after: updateState,
 
     play: () => spin(),
+
+    left: () => {
+      if (debugLevel >= 0)
+        ui.components.score.addAtField('credits', 20);
+    },
+
+    option: () => {
+      if (debugLevel >= 0) {
+        ui.components.score.resetField('wins');
+        ui.components.score.resetField('credits');
+      }
+    },
 
     right: () => {
       if (spining) return;

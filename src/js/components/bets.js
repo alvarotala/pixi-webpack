@@ -35,7 +35,7 @@ export default class BetsComponent {
     this.multipliers = new MultipliersBar();
     this.container.addChild(this.multipliers);
 
-    const len = config.bets_tiles_textures.length;
+    const len = config.roullete_bets.length;
     const pad = 20;
     const spacing = 5;
 
@@ -72,7 +72,7 @@ export default class BetsComponent {
 
       field.pivot.set(size/2,30)
 
-      const tile = new RoulleteTile(config.bets_tiles_textures[i], size);
+      const tile = new RoulleteTile(config.roullete_bets[i], size);
       tile.y = 240 + (size / 2);
       tile.x = xpos + (size / 2);
 

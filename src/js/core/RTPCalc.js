@@ -1,28 +1,35 @@
 import config from '../config.js'
-const seedrandom = require('seedrandom');
-const srandom = seedrandom();
 
-const f = {
+const seedrandom = require('seedrandom');
+global.srandom = seedrandom();
+
+const addentropy = (str) => {
+  seedrandom(str, { entropy: true });
+};
+
+
+const r = {
 
   setup: () => {
-    f.tiles   = config.roullete_tiles;
-    f.len     = config.roullete_tiles.length;
+    r.tiles   = config.roullete_tiles;
+    r.len     = config.roullete_tiles.length;
 
-    f.multipliers = {};
+    r.multipliers = {};
     Object.keys(config.multipliers).forEach((k) => {
-      f.multipliers[k] = {cursor: 0, values: config.multipliers[k]}
+      r.multipliers[k] = {cursor: 0, values: config.multipliers[k]}
     });
   },
 
   simulate: (algorithm, maxplaces, maxbet) => {
     console.log('***********************    RTP Simulated machine \n\n\n\n');
+
     let credits   = 0;
     let wins      = 0;
     let current   = 0;
 
     let i = 0;
     while(i < 1000000) { // Play spin.. 100 millones -> 100000000
-      const bets = f.getrandombets(8, maxplaces, maxbet);
+      const bets = r.getrandombets(8, maxplaces, maxbet);
 
       // const bets = [1,1,1,1,1,1,1,1];
 
@@ -37,15 +44,15 @@ const f = {
       //   [0,0,0,0,0,1,1,1],
       //   [1,2,0,0,0,0,0,0],
       // ];
-
+      //
       // const bets = patterns[i%patterns.length];
 
 
-      const btotal = f.totalbets(bets);
+      const btotal = r.totalbets(bets);
       const steps  = algorithm(current, bets, btotal); // steps
 
-      const pos = f.poswithdistance(current, steps);
-      const tile = f.tiles[pos];
+      const pos = r.poswithdistance(current, steps);
+      const tile = r.tiles[pos];
 
       /// if jackpot, play again..
       if (tile.jackpot != undefined) {
@@ -56,7 +63,7 @@ const f = {
       credits+=btotal;
 
       // sum earnings..
-      wins+=f.getpoints(tile, bets, steps);
+      wins+=r.getpoints(tile, bets, steps);
 
       current = pos;
       i++;
@@ -70,10 +77,10 @@ const f = {
   },
 
   getrandombets: (total, maxplaces, maxbet) => {
-    const t = Math.ceil(Math.random() * maxplaces);
+    const t = Math.ceil(srandom() * maxplaces);
     const bets = new Array(total).fill(0)
     for (let p=0; p<t; p++) {
-      bets[p] = Math.ceil(Math.random() * maxbet);
+      bets[p] = Math.ceil(srandom() * maxbet);
     }
 
     return bets.shuffle();
@@ -84,41 +91,41 @@ const f = {
   },
 
   poswithdistance: (from, steps) => {
-    return (from + steps) % f.len;
+    return (from + steps) % r.len;
   },
 
   getpoints: (tile, bets, steps) => {
     if (tile.jackpot !== undefined) return 0;
     let points = tile.points;
     if (tile.multiplier != undefined) {
-      points*= f.getmultiplier(steps, tile.multiplier);
+      points*= r.getmultiplier(steps, tile.multiplier);
     }
 
     return points * bets[tile.bet];
   },
 
   getmultiplier: (distance, k) => {
-    const m = f.multipliers[k];
+    const m = r.multipliers[k];
     const i = distance % m.values.length;
     return m.values[i];
   },
 
   getsimresult: (from, steps, bets) => {
-    const pos = f.poswithdistance(from, steps);
-    const tile = f.tiles[pos];
+    const pos = r.poswithdistance(from, steps);
+    const tile = r.tiles[pos];
 
     /// if jackpot, play again..
     if (tile.jackpot != undefined) {
       return 0;
     }
 
-    return f.getpoints(tile, bets, steps);
+    return r.getpoints(tile, bets, steps);
   },
 
   simulatecases: (from, bets) => {
     const cases = [];
-    for (let i = 0; i<f.len; i++) {
-      cases.push(f.getsimresult(from, i, bets));
+    for (let i = 0; i<r.len; i++) {
+      cases.push(r.getsimresult(from, i, bets));
     }
 
     return cases;
@@ -128,50 +135,93 @@ const f = {
   algorithms: {
 
     random: (from, bets, total) => {
-      return Math.floor(Math.random() * f.len);
+      return Math.floor(srandom() * r.len);
     },
 
     test1: (from, bets, total) => {
-      const cases = f.simulatecases(from, bets);
+      const cases = r.simulatecases(from, bets);
       let num = 0;
 
-      const randomf = srandom; // Math.random()
-
-      if (randomf() >= 0.41) { // magic number...
+      if (srandom() >= 0.41) { // magic number...
         const indexes = [];
         cases.forEach((c, i) => {
           if (c <= total) indexes.push(i);
         });
 
-        const sel = Math.floor(randomf() * indexes.length);
+        const sel = Math.floor(srandom() * indexes.length);
         num = indexes[sel];
       }
       else {
-        num = Math.floor(randomf() * f.len);
+        num = Math.floor(srandom() * r.len);
       }
 
       return num;
     },
+
+    interpolate2: (from, bets, total) => {
+      if (srandom() >= 0.1) { // low probs
+        const scales = config.roullete_tiles_scales;
+        const cursor = Math.ceil(srandom() * 100);
+
+        let pos = 0;
+        for (let i = 0; i<scales.length; i++) {
+          const dist = pos + scales[i];
+          if(cursor > pos && cursor <= dist) {
+            const tiles = [];
+            r.tiles.forEach((t, a) => {
+              if (t.bet == i) tiles.push(a);
+            });
+
+            return tiles[Math.floor(srandom() * tiles.length)];
+          }
+          pos=dist;
+        }
+      }
+
+      return Math.floor(srandom() * r.len);
+    },
+
+    interpolate: (from, bets, total) => {
+      if (srandom() >= 0.25) { // 0.2 = 89 0.3 = 98    = RTP 0.25 = 94%
+        const scales = config.roullete_tiles_scales;
+        const cursor = Math.ceil(srandom() * 100);
+
+        const smallonly = srandom() < 0.6;
+
+        let pos = 0;
+        for (let i = 0; i<scales.length; i++) {
+          const dist = pos + scales[i];
+          if(cursor > pos && cursor <= dist) {
+            const tiles = [];
+
+            r.tiles.forEach((t, a) => {
+              if (smallonly && t.bet == i && t.multiplier == undefined) {
+                tiles.push(a);
+              }
+              else if (!smallonly && t.bet == i) tiles.push(a);
+            });
+
+            const sel = tiles[Math.floor(srandom() * tiles.length)];
+            return ((r.len - from) + sel) % r.len;
+          }
+          pos=dist;
+        }
+      }
+
+      return Math.floor(srandom() * r.len);
+    }
 
   },
 
   foo: null
 };
 
-Array.prototype.shuffle = function() {
-  var i = this.length, j, temp;
-  if ( i == 0 ) return this;
-  while ( --i ) {
-     j = Math.floor( Math.random() * ( i + 1 ) );
-     temp = this[i];
-     this[i] = this[j];
-     this[j] = temp;
-  }
-  return this;
-}
+r.setup();
 
-f.setup();
-global.RTPCalc = f;
+global.RTPCalc = {
+  r: r,
+  addentropy: addentropy
+};
 
 
-// RTPCalc.simulate(f.algorithms.test1, 8, 5);
+// RTPCalc.r.simulate(r.algorithms.interpolate, 2, 1);
