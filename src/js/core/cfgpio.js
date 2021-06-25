@@ -132,11 +132,18 @@ export const setGPIOInterface = () => {
       return sendDataToGPIO('L:'+seqstr+'$'+times);
     },
 
+    keyledAnimationLock: false,
     keyledAnimation: (name, sequences, times=0) => {
       if (debugLevel == 1) return;
       if (name !== null && name == gpio.send.keyledAnimationName) return;
       if (!gpio.mapping) return;
       gpio.send.keyledAnimationName = name;
+
+      if (name === true) { // check shared lock..
+        if (gpio.send.keyledAnimationLock === true) return;
+        gpio.send.keyledAnimationLock = true;
+        setHandledTimeout(() => { gpio.send.keyledAnimationLock = false }, 300);
+      }
 
       const seqstr = sequences.map((seq) => {
         const tmparr = [];

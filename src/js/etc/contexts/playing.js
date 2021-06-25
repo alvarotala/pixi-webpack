@@ -119,7 +119,7 @@ const updateState = async () => {
     return;
   }
 
-  gpio.send.keyledAnimation(null, animations.keyled.keyboard(keys));
+  gpio.send.keyledAnimation(true, animations.keyled.keyboard(keys));
 }
 
 const cantPlayLastGame = () => {
