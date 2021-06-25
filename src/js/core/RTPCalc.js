@@ -7,6 +7,7 @@ const addentropy = (str) => {
   seedrandom(str, { entropy: true });
 };
 
+const logger = {};
 
 const r = {
 
@@ -33,16 +34,24 @@ const r = {
 
       // const bets = [1,1,1,1,1,1,1,1];
 
+      // const bets = [0,0,0,0,0,0,0,1];
+
+      // const bets = [1,0,0,0,0,0,0,0];
+
+      // const bets = [1,0,0,0,0,0,0,1];
+
+      // const bets = [1,0,0,0,1,0,0,1];
+
       // const patterns = [
-      //   [0,0,1,1,0,1,1,1],
-      //   [0,1,1,1,0,1,0,1],
-      //   [1,1,1,0,0,1,1,1],
+      //   [1,0,1,1,0,1,1,2],
+      //   [1,1,1,1,0,1,0,1],
+      //   [1,1,2,0,0,1,1,1],
       //   [1,1,1,1,1,1,1,1],
       //   [1,0,0,0,0,0,0,0],
-      //   [0,0,0,0,0,0,0,1],
-      //   [0,0,0,0,0,0,1,1],
-      //   [0,0,0,0,0,1,1,1],
-      //   [1,2,0,0,0,0,0,0],
+      //   [1,0,0,0,2,0,0,1],
+      //   [1,2,0,0,0,0,1,1],
+      //   [1,0,0,2,0,1,1,1],
+      //   [2,2,0,0,0,0,0,0],
       // ];
       //
       // const bets = patterns[i%patterns.length];
@@ -74,6 +83,8 @@ const r = {
 
     console.log('>> results:', credits, wins, diff);
     console.log(">> RTP:", rtp);
+
+    console.log(logger);
   },
 
   getrandombets: (total, maxplaces, maxbet) => {
@@ -158,7 +169,7 @@ const r = {
       return num;
     },
 
-    interpolate2: (from, bets, total) => {
+    interpolate1: (from, bets, total) => {
       if (srandom() >= 0.1) { // low probs
         const scales = config.roullete_tiles_scales;
         const cursor = Math.ceil(srandom() * 100);
@@ -181,8 +192,8 @@ const r = {
       return Math.floor(srandom() * r.len);
     },
 
-    interpolate: (from, bets, total) => {
-      if (srandom() >= 0.25) { // 0.2 = 89 0.3 = 98    = RTP 0.25 = 94%
+    interpolate2: (from, bets, total) => {
+      if (srandom() >= 0.2) { // 0.2 = 89 0.3 = 98    = RTP 0.25 = 94%
         const scales = config.roullete_tiles_scales;
         const cursor = Math.ceil(srandom() * 100);
 
@@ -209,6 +220,44 @@ const r = {
       }
 
       return Math.floor(srandom() * r.len);
+    },
+
+    interpolate: (from, bets, total) => {
+
+      const findtile = (condition) => {
+        const tiles = [];
+
+        r.tiles.forEach((t, a) => {
+          if (condition(t, a)) tiles.push(a);
+        });
+
+        const sel = tiles[Math.floor(srandom() * tiles.length)];
+        return ((r.len - from) + sel) % r.len; // tile number to steps..
+      }
+
+
+      /// jackpot?
+      if (srandom() < 0.05) { // 5%
+        return findtile((t) => (t.jackpot != undefined));
+      }
+
+      const scales = config.roullete_tiles_scales;
+      const cursor = Math.ceil(srandom() * 100);
+
+      const smallonly = srandom() < 0.1;
+
+      let pos = 0;
+      for (let i = 0; i<scales.length; i++) {
+        const dist = pos + scales[i];
+        if(cursor > pos && cursor <= dist) {
+          if (smallonly) {
+            return findtile((t) => (t.bet == i && t.small == true));
+          }
+
+          return findtile((t) => (t.bet == i));
+        }
+        pos=dist;
+      }
     }
 
   },
@@ -224,4 +273,4 @@ global.RTPCalc = {
 };
 
 
-// RTPCalc.r.simulate(r.algorithms.interpolate, 2, 1);
+RTPCalc.r.simulate(r.algorithms.interpolate, 5, 2);

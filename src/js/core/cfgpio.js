@@ -1,7 +1,7 @@
 import config from '../config.js'
 import storage from './storage.js'
 
-import { log, promise, pause, runsequencial, file } from './utils.js'
+import { log, promise, pause, runsequencial, file, setHandledTimeout } from './utils.js'
 
 import { dispatch } from './inputs.js'
 import { setContext, dispatchError } from './contexts.js'
@@ -96,6 +96,7 @@ export const removeGPIOListeners = () => {
   gpio.socket.onclose = null;
 }
 
+
 export const setGPIOInterface = () => {
   log(">> setGPIOInterface");
 
@@ -126,14 +127,16 @@ export const setGPIOInterface = () => {
     },
 
     ledstripAnimation: (sequences, times=0) => {
-      if (debugLevel == 1) return;
+      if (debugLevel > 0) return;
       const seqstr = sequences.map((seq) => seq.join(',')).join('#');
       return sendDataToGPIO('L:'+seqstr+'$'+times);
     },
 
-    keyledAnimation: (sequences, times=0) => {
+    keyledAnimation: (name, sequences, times=0) => {
       if (debugLevel == 1) return;
+      if (name !== null && name == gpio.send.keyledAnimationName) return;
       if (!gpio.mapping) return;
+      gpio.send.keyledAnimationName = name;
 
       const seqstr = sequences.map((seq) => {
         const tmparr = [];

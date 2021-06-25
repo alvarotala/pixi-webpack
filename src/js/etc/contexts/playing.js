@@ -86,7 +86,7 @@ const updateState = async () => {
 
   if (spining) {
     for(let i=0;i<8;++i) keys[i+6]=(ui.components.bets.fields[i].value>0?1:0);
-    gpio.send.keyledAnimation(animations.keyled.keyboard(keys));
+    gpio.send.keyledAnimation('spining', animations.keyled.keyboard(keys));
     return;
   }
 
@@ -96,10 +96,10 @@ const updateState = async () => {
     keys[2] = 2;
   }
 
-  // if anny placed bet..
+  // if any placed bet..
   if (ui.components.bets.total() > 0) {
     keys[4] = 2;
-    keys[5] = 2;
+    keys[5] = 1;
 
     for(let i=0;i<8;++i) keys[i+6]=(ui.components.bets.fields[i].value>0?1:0);
   }
@@ -115,13 +115,11 @@ const updateState = async () => {
   }
 
   if (keys.reduce((a, b) => (a + b), 0) == 0) {
-    await pause(100)
-    gpio.send.keyledAnimation(animations.keyled.waiting());
+    gpio.send.keyledAnimation('waiting', animations.keyled.waiting());
     return;
   }
 
-  await pause(100)
-  gpio.send.keyledAnimation(animations.keyled.keyboard(keys));
+  gpio.send.keyledAnimation(null, animations.keyled.keyboard(keys));
 }
 
 const cantPlayLastGame = () => {
@@ -204,9 +202,6 @@ const spin = async () => {
 };
 
 
-
-
-
 const spincompleted = (pay) => {
   spining = false;
 
@@ -234,14 +229,14 @@ const spincompleted = (pay) => {
   // Workaround: instead of Jackpot, users get a "free spin"..
   if (selected.jackpot != undefined) {
     playSound('roulletelucky');
-    file.audit('GAME', 'FREESP');
     updateState();
+
+    file.audit('GAME', 'FREESP');
     return; // nothing happens.. just a free spin
   }
 
   ui.components.bets.reset();
 
-  if (pay == 0) playSound('roulletelos');
   if (pay > 0) {
     if (selected.bonus == true) {
       setContext('bonus', {amount: pay});
@@ -250,6 +245,10 @@ const spincompleted = (pay) => {
 
     ui.components.score.addAtField('wins', pay);
     playSound('roulletewin');
+  }
+
+  else {
+    playSound('roulletelos');
   }
 
   updateState();

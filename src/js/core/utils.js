@@ -6,6 +6,10 @@ import config from '../config.js'
 global.timeouts   = [];
 global.intervals  = [];
 
+export const lerp2 = ( x, a1, a2, b1, b2 ) => {
+  return b1 + ( x - a1 ) * ( b2 - b1 ) / ( a2 - a1 );
+}
+
 export const promise = (callback) => {
   return new Promise(callback);
 };
@@ -115,9 +119,10 @@ export const fadeOutSound = (name, speed = 0.1, ms = 50) => {
 let config_path, counters_path, audit_path, berror_path;
 export const set_basepath = (path) => {
   config_path   = path + "/cfconfig.json";
-  counters_path = path + "/cfcounters.json";
   audit_path    = path + "/cfaudit.log";
-  berror_path   = path + "/cferrors.json";
+  berror_path   = path + "/cfgpio_error.data";
+
+  counters_path = path + "/cfcounters.json";
 
   console.info("***** config.base_path", path);
 };
@@ -125,15 +130,26 @@ export const set_basepath = (path) => {
 
 export const file = {
 
-  writejson: (path, data) => {
+  w: (path, data, mode = 'w') => {
     if (!window.electron) return;
-    window.electron.file.write(path, JSON.stringify(data), {flag: 'w'});
+    window.electron.file.write(path, data, {flag: mode});
   },
 
-  readjson: (path, callback) => {
+  r: (path, callback) => {
     if (!window.electron) return;
     window.electron.file.read(path, (success, data) => {
       if (!success) callback(null);
+      callback(data);
+    });
+  },
+
+  writejson: (path, data) => {
+    file.w(path, JSON.stringify(data), 'w')
+  },
+
+  readjson: (path, callback) => {
+    file.r(path, (data) => {
+      if (!data) callback(null);
       callback(JSON.parse(data));
     });
   },
@@ -146,24 +162,68 @@ export const file = {
     file.writejson(config_path, data);
   },
 
-  setcounters: (data) => {
-    file.writejson(counters_path, data);
-  },
-
   audit: (...args) => {
     if (!window.electron) return;
     if (args == null) args = ['ERR', 708];
     args.unshift(Date.now())
     args.push('\r\n')
-    window.electron.file.write(audit_path, args.join(':'), {flag: 'a'});
-  },
-
-  setberror: (code, data) => {
-    file.writejson(berror_path, {error: 1, code: code, data: data});
+    file.w(audit_path, args.join(':'), 'a');
   },
 
   getberror: (callback) => {
-    file.readjson(berror_path, callback);
+    file.r(berror_path, callback);
+  },
+
+  setberror: (data) => {
+    file.w(error_path, data, 'w');
   }
 
-}
+};
+
+
+/**
+ * Converts an HSL color value to RGB. Conversion formula
+ * adapted from http://en.wikipedia.org/wiki/HSL_color_space.
+ * Assumes h, s, and l are contained in the set [0, 1] and
+ * returns r, g, and b in the set [0, 255].
+ *
+ * @param   {number}  h       The hue
+ * @param   {number}  s       The saturation
+ * @param   {number}  l       The lightness
+ * @return  {Array}           The RGB representation
+ */
+export const hslToRgb = (h=0, s=1, l=0.5) => {
+    var r, g, b;
+
+    if(s == 0){
+        r = g = b = l; // achromatic
+    }else{
+        const hue2rgb = (p, q, t) => {
+            if(t < 0) t += 1;
+            if(t > 1) t -= 1;
+            if(t < 1/6) return p + (q - p) * 6 * t;
+            if(t < 1/2) return q;
+            if(t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+            return p;
+        }
+
+        var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+        var p = 2 * l - q;
+        r = hue2rgb(p, q, h + 1/3);
+        g = hue2rgb(p, q, h);
+        b = hue2rgb(p, q, h - 1/3);
+    }
+
+    return {r: Math.round(r * 255), g: Math.round(g * 255), b: Math.round(b * 255)};
+};
+
+
+export const hslToHex = (h, s, l) => {
+  const hsl = hslToRgb(h, s, l);
+  const toHex = (c) => {
+    const hex = c.toString(16);
+    return hex.length == 1 ? '0' + hex : hex;
+  };
+
+  return '0x' + toHex(hsl.r) + toHex(hsl.g) + toHex(hsl.b);
+};

@@ -1,10 +1,12 @@
 import * as PIXI from 'pixi.js'
 import config from '../config.js'
+import { next } from '../core/utils.js'
+import { AnimatedNumberField } from '../etc/TextField.js'
 
 import { Actions, Interpolations } from 'pixi-actions';
 import Easing from '../etc/easing.js'
 
-import { AnimatedNumberField } from '../etc/TextField.js'
+import * as particles from 'pixi-particles'
 
 export default class BonusComponent {
 
@@ -27,6 +29,7 @@ export default class BonusComponent {
       .add('bonus_roullete', config.path_assets + '/images/bonus_roullete.png')
       .add('bonus_roullete_center', config.path_assets + '/images/bonus_roullete_center.png')
       .add('bonus_roullete_tick', config.path_assets + '/images/bonus_roullete_tick.png')
+      .add('bonus_help', config.path_assets + '/images/bonus_help.png')
 
       .load(this.build.bind(this))
   }
@@ -79,11 +82,12 @@ export default class BonusComponent {
 
 
     this.field = new AnimatedNumberField(120, 60, '0');
-    this.field.y = 400;
+    this.field.background.alpha = 1;
+    this.field.oy = 380;
+    this.field.y = this.field.oy;
     this.field.x = (config.width / 2);
     this.field.pivot.set(60, 30);
 
-    this.field.alpha = 0;
     this.container.addChild(this.field);
   }
 
@@ -95,8 +99,10 @@ export default class BonusComponent {
     // NOTE: memory leak fix?
     ui.view.addChild(this.container);
 
-    this.field.y = 400;
+    this.field.y = this.field.oy;
     this.field.setText(this.amount);
+
+    this.tick.alpha = 0;
 
     this.roullete.scale.set(0.2, 0.2);
 
@@ -104,19 +110,15 @@ export default class BonusComponent {
     this.brakes = null;
     this.speed = 0.02;
     this.decelerating = false;
-    
+
     this.ticker = (delta) => this.enterLoopAnimation();
     app.ticker.add(this.ticker);
-
-    const logo = ui.components.background.logo;
 
     const actions = Actions.parallel(
       Actions.scaleTo(this.roullete, 0.4, 0.4, 0.9, Easing.easeInQuad),
       Actions.fadeTo(this.container, 1.0, 0.5, Easing.easeInQuad),
-      Actions.fadeTo(logo, 0, 0.5, Easing.easeInQuad)
+      Actions.fadeTo(ui.components.background.logo, 0, 0.5, Easing.easeInQuad)
     );
-
-    actions.queue(Actions.fadeTo(this.field, 1.0, 0.5, Easing.easeInQuad));
 
     actions.play();
   }
@@ -128,12 +130,10 @@ export default class BonusComponent {
 
     app.ticker.remove(this.ticker);
 
-    const logo = ui.components.background.logo;
-
     const actions = Actions.parallel(
       Actions.scaleTo(this.roullete, 0.2, 0.2, 0.5, Easing.easeInQuad),
-      Actions.fadeTo(this.container, 0.0, 0.5, Easing.easeInQuad),
-      Actions.fadeTo(logo, 1, 0.5, Easing.easeInQuad)
+      Actions.fadeTo(this.container, 0, 0.5, Easing.easeInQuad),
+      Actions.fadeTo(ui.components.background.logo, 1, 0.5, Easing.easeInQuad),
     );
 
     actions.queue(Actions.runFunc(() => {
@@ -146,6 +146,15 @@ export default class BonusComponent {
     actions.play();
   }
 
+  animateBig() {
+    if (this.roullete.scale.x >= 1) return;
+
+    Actions.parallel(
+      Actions.scaleTo(this.roullete, 1, 1, 0.9, Easing.easeInQuad),
+      Actions.moveTo(this.field, this.field.x, 200, 0.5, Easing.easeInQuad),
+      Actions.fadeTo(this.tick, 1.0, 1.2, Easing.easeInQuad)
+    ).play();
+  }
 
   getRoulletePosition(rotation) {
     const angle = (rotation * 180/Math.PI) % 360;
@@ -159,10 +168,21 @@ export default class BonusComponent {
     return Math.floor(this.getRoulletePosition(this.roullete.rotation)) % 2;
   }
 
+  play(selection, target, oncomplete) {
+    if (this.isplaying) return;
+    this.oncomplete = oncomplete;
+
+    this.isplaying = true;
+    this.decelerating = false;
+    this.brakes = null;
+    this.speed = this.getSpeedWithTargetFromCurrentRotation(target);
+
+    this.field.setBackgroundColor(selection ? 0xbd6306 : 0x330245);
+    this.animateBig();
+  }
 
   getSpeedWithTargetFromCurrentRotation(target) {
     while (true)  { // tries
-      // let setspeed = (Math.random() * 0.1) + (this.speedlimit - 0.1);
       let setspeed = Math.random() * 0.1;
 
       let tmpspeed = setspeed;
@@ -181,33 +201,32 @@ export default class BonusComponent {
         tmpspeed-=this.desrate; // decelerate
 
         if (tmpspeed < this.stopdelta) {
-          const result = Math.floor(this.getRoulletePosition(rotation)) % 2;
-          if (result != target) break;
+          const angle = this.getRoulletePosition(rotation);
+          const result = Math.floor(angle) % 2;
+          if (result != target) break; // try another speed..
+
+          // check padding
+          const delta = angle % 1;
+          if (delta < 0.05 || delta >= 0.95) {
+            break; // too close to edge.. better avoid confussions..
+          }
+
           return setspeed;
         }
       }
     }
   }
 
-
-  play(target, oncomplete) {
-    if (this.isplaying) return;
-    this.oncomplete = oncomplete;
-
-    this.isplaying = true;
+  endsLoopAnimation() {
+    this.brakes = true;
     this.decelerating = false;
-    this.brakes = null;
-    this.speed = this.getSpeedWithTargetFromCurrentRotation(target);
+    this.isplaying = false;
+    this.speed = 0;
 
-    if (this.roullete.scale.x < 1) {
-      Actions.parallel(
-        Actions.scaleTo(this.roullete, 1, 1, 0.9, Easing.easeInQuad),
-        Actions.moveTo(this.field, this.field.x, 200, 0.5, Easing.easeInQuad),
-        Actions.fadeTo(this.tick, 1.0, 1.2, Easing.easeInQuad)
-      ).play();
-    }
+    console.log(this.roullete.rotation, this.getRoulletePosition(this.roullete.rotation));
+
+    this.oncomplete(this.getRoulleteResult());
   }
-
 
   enterLoopAnimation() {
     if (this.brakes == true) return;
@@ -226,14 +245,14 @@ export default class BonusComponent {
       this.speed-=this.desrate; // 0.0003
 
       if (this.speed < this.stopdelta) {  // stop
-        this.brakes = true;
-        this.decelerating = false;
-        this.isplaying = false;
-        this.speed = 0;
-
-        this.oncomplete(this.getRoulleteResult());
+        this.endsLoopAnimation();
       }
     }
+
+    else {
+      this.field.setBackgroundColor(this.getRoulleteResult() ? 0xbd6306 : 0x330245);
+    }
+
   }
 
 }

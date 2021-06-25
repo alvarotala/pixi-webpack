@@ -1,6 +1,8 @@
 import * as PIXI from 'pixi.js'
 import config from '../config.js'
 
+import { lerp2, hslToHex } from '../core/utils.js'
+
 import RoulleteTile from '../etc/RoulleteTile.js'
 import TextField, {AnimatedNumberField, SimpleText} from '../etc/TextField.js'
 
@@ -94,11 +96,16 @@ export default class BetsComponent {
 
   addAtPosition(i, num=1) {
     const field = this.fields[i];
+    if (field.value >= config.max_bet_per_tile) return;
+
     field.value = field.value + num;
     field.setText(field.value, (num > 0));
 
     if (num > 0 && field.value >= 1) {
-      field.selected.visible = true;
+      // field.setBackgroundColor(0xb90505);
+      // field.background.alpha = 0.8 + lerp2(field.value, 0, config.max_bet_per_tile, 0, 0.2);
+      field.background.alpha = 0.9;
+      field.setBackgroundColor(hslToHex(lerp2(field.value, 0, config.max_bet_per_tile, 0, 0.90)));
     }
   }
 
@@ -107,7 +114,8 @@ export default class BetsComponent {
       field.value = 0;
       field.setText(0, false);
 
-      field.selected.visible = false;
+      field.setBackgroundColor(0x990033);
+      field.background.alpha = 0.5;
     });
   }
 

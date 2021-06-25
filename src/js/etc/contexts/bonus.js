@@ -27,9 +27,10 @@ const completed = (result) => {
 
   runsequencial(100,
     () => gpio.send.ledstripAnimation(animations.ledstrip.fade(200)),
-    // () => gpio.send.keyledAnimation(animations.keyled.keyboard([0,2,2, 0,2,0, 0,0,0,0,0,0,0,0]))
-    () => gpio.send.keyledAnimation(animations.keyled.bonuschoise())
+    () => gpio.send.keyledAnimation('bonuschoise', animations.keyled.bonuschoise())
   );
+
+  /// return; // DEV: play infitity..
 
   // winner winner chicken dinner
   if (result == currentSelection) {
@@ -52,7 +53,8 @@ const playWithSelection = async (selection) => {
   isPlaying = true;
   currentSelection = selection;
 
-  const num = Math.random() < (config.bonus_rate * 0.01) ? 1 : 0; // 1 = user loss, 0 = user wins
+
+  const num = Math.random() < (config.bonus_rate * 0.01) ? 1 : 0; // 1 = change selection, 0 = user wins
   const target = Math.abs(selection - num);
 
 
@@ -65,7 +67,7 @@ const playWithSelection = async (selection) => {
 
   runsequencial(100,
     () => gpio.send.ledstripAnimation(animations.ledstrip.fade(35)),
-    () => gpio.send.keyledAnimation(animations.keyled.waiting(25))
+    () => gpio.send.keyledAnimation('waiting', animations.keyled.waiting(25))
   );
 
   await pause(200);
@@ -76,7 +78,7 @@ const playWithSelection = async (selection) => {
   ui.components.score.animateDismiss();
   await pause(300);
 
-  ui.components.bonus.play(target, completed);
+  ui.components.bonus.play(selection, target, completed);
 };
 
 export const ContextBonus = {
@@ -90,8 +92,7 @@ export const ContextBonus = {
 
     runsequencial(100,
       () => gpio.send.ledstripAnimation(animations.ledstrip.fade(200)),
-      // () => gpio.send.keyledAnimation(animations.keyled.keyboard([0,2,2, 0,2,0, 0,0,0,0,0,0,0,0]))
-      () => gpio.send.keyledAnimation(animations.keyled.bonuschoise())
+      () => gpio.send.keyledAnimation('bonuschoise', animations.keyled.bonuschoise())
     );
 
     playSound('bonusintro');

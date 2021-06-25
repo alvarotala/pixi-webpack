@@ -31,6 +31,7 @@ const f = {
 
     message.setText(text);
 
+    gpio.send.lightsOff();
     ui.stopAll();
   }
 };

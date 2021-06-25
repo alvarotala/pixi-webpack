@@ -23,33 +23,21 @@ const _textFieldStyle = new PIXI.TextStyle({
 export default class TextField extends PIXI.Container {
 
   // bgcol=0x330000, selcol=0xb90505
-  constructor(width, height, def="33", bgcol=0x990033, selcol=0xb90505) {
+  constructor(width, height, def="33", bgcol=0x990033) {
     super();
 
-    this.width  = width;
-    this.height = height;
+    this.w  = width;
+    this.h  = height;
+    this.width   = width;
+    this.height  = height;
 
-    this.background = new PIXI.Graphics();
-    this.background.beginFill(bgcol);
-    this.background.drawRoundedRect(0, 0, width, height, 20);
-    this.background.endFill();
+    this.background = new PIXI.Container();
+    this.setBackgroundColor(bgcol);
 
     this.background.alpha = 0.5;
-
     this.addChild(this.background);
 
-    this.selected = new PIXI.Graphics();
-    this.selected.beginFill(selcol);
-    this.selected.drawRoundedRect(0, 0, width, height, 20);
-    this.selected.endFill();
-
-    this.selected.visible = false;
-
-    this.addChild(this.selected);
-
     const style = Object.assign({}, _textFieldStyle);
-
-
 
     // this.text = new PIXI.BitmapText(def, { fontName: "Default" });
     this.text = new PIXI.Text(def, style);
@@ -59,6 +47,22 @@ export default class TextField extends PIXI.Container {
     this.text.y = height/2;
 
     this.addChild(this.text);
+  }
+
+  setBackgroundColor(color, radio = 20) {
+    if (color == this.lastcolor) return;
+    this.lastcolor = color;
+
+    this.background.children.forEach((c) => {
+      this.background.removeChild(c);
+    });
+
+    const graph = new PIXI.Graphics();
+    graph.beginFill(color);
+    graph.drawRoundedRect(0, 0, this.w, this.h, radio);
+    graph.endFill();
+
+    this.background.addChild(graph);
   }
 
   setText(text) {

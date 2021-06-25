@@ -7,10 +7,6 @@ import { log, next, pause, file } from './utils.js'
 
 import { startGPIOInterface, mapGPIOtoInputs, rawGPIOListener, mapsetup, removeGPIOListeners } from './cfgpio.js'
 
-config.autostart_interrupts = 4;
-config.settings_pin_length = 6;
-config.settings_pin = '446544';
-config.autostart_timeout = 5; // seconds
 
 let terminal = new Terminal();
 
@@ -32,7 +28,7 @@ class Bootloader {
           this.settings_keymap();
           return;
       }
-
+      
       file.getconfig((object) => {
         if (object == null) {
           // Block machine.. cant read config file..
@@ -108,7 +104,7 @@ class Bootloader {
       terminal.newline()
 
       const pin = [];
-      for(let i=0; i<config.settings_pin_length; i++) {
+      for(let i=0; i<config.settings_pin.length; i++) {
         pin.push(settings_auth_pin.length > i ? "*" : '-');
       }
 
@@ -124,7 +120,7 @@ class Bootloader {
       settings_auth_pin.push((num + 1));
       settings_auth_update_screen();
 
-      if (settings_auth_pin.length >= config.settings_pin_length) {
+      if (settings_auth_pin.length >= config.settings_pin.length) {
         removeGPIOListeners();
 
         next(500, () => {
