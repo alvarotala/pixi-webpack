@@ -65,6 +65,7 @@ const f = {
 
     roullete.resetCursor();
     ui.components.bets.clearLastValues();
+    ui.components.bets.deselect();
 
     roullete.animateReset();
 

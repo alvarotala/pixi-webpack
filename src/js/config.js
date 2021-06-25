@@ -7,7 +7,7 @@ const config = {
 
   autostart_interrupts: 4,
   settings_pin: '446544',
-  autostart_timeout: 1, // seconds
+  autostart_timeout: 5, // seconds
 
 
   idle_timeout: 10, /// seconds

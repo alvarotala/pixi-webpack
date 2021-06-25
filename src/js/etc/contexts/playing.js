@@ -185,6 +185,7 @@ const spin = async () => {
   const betsva = bets.join(',')
   file.audit('GAME', 'SPIN', pos, pay, btotal, betsva, csf.credits.value, csf.wins.value);
 
+  ui.components.bets.deselect();
   ui.components.bets.updateLastValues()
   ui.components.bets.animatePlaySelecteds()
 
@@ -203,7 +204,8 @@ const spin = async () => {
 
 
 const spincompleted = (pay) => {
-  spining = false;
+  const i = ui.components.roullete.current;
+  const selected = config.roullete_tiles[i];
 
   // re-enable coiner
   gpio.send.setCoinerState(true);
@@ -211,14 +213,15 @@ const spincompleted = (pay) => {
   ui.components.bets.animatePlayReset();
   ui.components.bets.showLastValues();
 
-  const i = ui.components.roullete.current;
-  const selected = config.roullete_tiles[i];
+  ui.components.bets.select(selected.bet);
+
 
   // log("> selected:", selected);
 
   gpio.send.ledstripAnimation(animations.ledstrip.playing_default());
 
   file.audit('GAME', 'SPINCOMP');
+  spining = false;
 
   // TODO: Jackpot
   // if (selected.jackpot != undefined) {

@@ -135,7 +135,7 @@ export const setGPIOInterface = () => {
     keyledAnimationLock: false,
     keyledAnimation: (name, sequences, times=0) => {
       if (debugLevel == 1) return;
-      if (name !== null && name == gpio.send.keyledAnimationName) return;
+      if (name !== true && name == gpio.send.keyledAnimationName) return;
       if (!gpio.mapping) return;
       gpio.send.keyledAnimationName = name;
 

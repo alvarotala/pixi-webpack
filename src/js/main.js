@@ -79,11 +79,20 @@ global.app = new PIXI.Application({
 */
 
 
-
-
 global.app = {};
 
-app.renderer = new PIXI.Renderer({ width: config.width, height: config.height, backgroundColor: 0x000000, legacy: true });
+app.renderer = new PIXI.Renderer({
+  width: config.width,
+  height: config.height,
+  backgroundColor: 0x000000,
+  legacy: true,
+  antialias: true,
+  // powerPreference: 'high-performance',
+  // transparent: false,
+  // useContextAlpha: false,
+  // view: document.querySelector('#scene')
+});
+
 document.body.appendChild(app.renderer.view);
 
 app.stage = new PIXI.Container();

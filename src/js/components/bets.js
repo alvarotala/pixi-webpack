@@ -119,6 +119,17 @@ export default class BetsComponent {
     });
   }
 
+  select(bet) {
+    if (bet == undefined || bet == null) return;
+    this.tiles[bet].hover.visible = true;
+  }
+
+  deselect() {
+    this.tiles.forEach((tile) => {
+      tile.hover.visible = false;
+    });
+  }
+
   total() {
     return this.fields.reduce(((sum, a, i) => (sum + a.value)), 0);
   }
