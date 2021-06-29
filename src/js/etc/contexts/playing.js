@@ -5,7 +5,9 @@ import {
   file,
   next,
   pause,
+  getSound,
   playSound,
+  stopSound,
   setHandledTimeout,
   setHandledInterval,
   clearHandledInterval,
@@ -34,6 +36,8 @@ const startActivityInterval = () => {
   if (currentContext != 'playing') return;
 
   activityIntervalRef = setHandledInterval(() => {
+    if (currentContext != 'playing') return; // check..
+
     let foundedActivity = false;
 
     // check for winnings to pay..
@@ -86,7 +90,7 @@ const updateState = async () => {
 
   if (spining) {
     for(let i=0;i<8;++i) keys[i+6]=(ui.components.bets.fields[i].value>0?1:0);
-    gpio.send.keyledAnimation('spining', animations.keyled.keyboard(keys));
+    gpio.send.keyledAnimation(animations.keyled.keyboard(keys));
     return;
   }
 
@@ -115,11 +119,11 @@ const updateState = async () => {
   }
 
   if (keys.reduce((a, b) => (a + b), 0) == 0) {
-    gpio.send.keyledAnimation('waiting', animations.keyled.waiting());
+    gpio.send.keyledAnimation(animations.keyled.waiting());
     return;
   }
 
-  gpio.send.keyledAnimation(true, animations.keyled.keyboard(keys));
+  gpio.send.keyledAnimation(animations.keyled.keyboard(keys));
 }
 
 const cantPlayLastGame = () => {
@@ -134,10 +138,11 @@ const cantPlayLastGame = () => {
 };
 
 
-
+let canPlay = false;
 let spining = false;
 
 const spin = async () => {
+  if (!canPlay) return;
   if (spining) return;
 
   // check if bets are set..
@@ -167,13 +172,13 @@ const spin = async () => {
 
   // disable coiner
 
-  console.log('----------------------------');
-  console.log('current', current);
-  console.log('btotal', btotal);
-  console.log('asteps', asteps);
-  console.log('pos', pos);
-  console.log('tile', tile.texture);
-  console.log('pay', pay);
+  // console.log('----------------------------');
+  // console.log('current', current);
+  // console.log('btotal', btotal);
+  // console.log('asteps', asteps);
+  // console.log('pos', pos);
+  // console.log('tile', tile.texture);
+  // console.log('pay', pay);
 
 
   const steps = ((1 + Math.floor(Math.random() * 2)) * len) + asteps;
@@ -185,13 +190,16 @@ const spin = async () => {
   const betsva = bets.join(',')
   file.audit('GAME', 'SPIN', pos, pay, btotal, betsva, csf.credits.value, csf.wins.value);
 
+  ui.components.score.setPoints(0);
+
   ui.components.bets.deselect();
   ui.components.bets.updateLastValues()
   ui.components.bets.animatePlaySelecteds()
 
   updateState();
 
-  playSound('roulletespin');
+  playSound(0, 'roulletespin');
+  getSound('roulletemain').volume = 1.0;
 
   const animator = new RoulleteSpinAnimatorSimple();
   await animator.run(steps);
@@ -223,6 +231,8 @@ const spincompleted = (pay) => {
   file.audit('GAME', 'SPINCOMP');
   spining = false;
 
+  getSound('roulletemain').volume = 0.5;
+
   // TODO: Jackpot
   // if (selected.jackpot != undefined) {
   //   setContext('jackpot', {mode: selected.jackpot});
@@ -231,7 +241,7 @@ const spincompleted = (pay) => {
 
   // Workaround: instead of Jackpot, users get a "free spin"..
   if (selected.jackpot != undefined) {
-    playSound('roulletelucky');
+    playSound(0, 'roulletelucky');
     updateState();
 
     file.audit('GAME', 'FREESP');
@@ -246,22 +256,23 @@ const spincompleted = (pay) => {
       return;
     }
 
+    ui.components.score.setPoints(pay);
     ui.components.score.addAtField('wins', pay);
-    playSound('roulletewin');
+    playSound(0, 'roulletewin');
   }
 
   else {
-    playSound('roulletelos');
+    playSound(0, 'roulletelos');
   }
 
   updateState();
 }
 
-
 export const ContextPlaying = {
   coineractive: true,
 
   init: async () => {
+    canPlay = false;
     ui.components.roullete.animateReset();
 
     gpio.send.ledstripAnimation(animations.ledstrip.playing_intro());
@@ -277,11 +288,16 @@ export const ContextPlaying = {
       gpio.send.ledstripAnimation(animations.ledstrip.playing_default());
     }
 
-    playSound('playingintro');
+    playSound(0, 'playingintro');
+    playSound(1, 'roulletemain', { loop: true, volume: 0.5 });
+
+    next(1000, () => { canPlay = true; });
   },
 
   dealloc: () => {
+    canPlay = false;
     cancelActivityTimeout();
+    stopSound('roulletemain');
   },
 
   inputs: {
@@ -297,10 +313,10 @@ export const ContextPlaying = {
     },
 
     option: () => {
-      if (debugLevel >= 0) {
-        ui.components.score.resetField('wins');
-        ui.components.score.resetField('credits');
-      }
+      if (!canPlay) return;
+      if (spining) return;
+
+      setContext('menu');
     },
 
     right: () => {
@@ -325,12 +341,13 @@ export const ContextPlaying = {
     pay: () => {
       if (spining) return;
       const num = ui.components.score.fields.wins.value;
+      if (num <= 0) return;
 
       // DEV: Test
-      if (num == 0) {
-        gpio.send.hopperReleaseCoins(1);
-        return;
-      }
+      // if (num == 0) {
+      //   gpio.send.hopperReleaseCoins(1);
+      //   return;
+      // }
 
       const csf = ui.components.score.fields;
       file.audit('GAME', 'PAYOUT', csf.credits.value, num);
@@ -342,16 +359,18 @@ export const ContextPlaying = {
     numpad: (index) => {
       if (spining) return;
       if (ui.components.score.fields.credits.value <= 0) return;
+      const field = ui.components.bets.fields[index];
+      if (field.value >= config.max_bet_per_tile) return;
 
       ui.components.bets.addAtPosition(index, 1);
       ui.components.score.addAtField('credits', -1);
-      playSound('addbet');
+      playSound(0, 'addbet');
     },
 
     addcoins: (num) => {
       ui.components.score.addAtField('credits', num);
       gpio.send.ledstripAnimation(animations.ledstrip.playing_default());
-      playSound('addcoins');
+      playSound(0, 'addcoins');
     }
   }
 };

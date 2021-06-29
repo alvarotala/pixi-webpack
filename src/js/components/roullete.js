@@ -85,9 +85,8 @@ export default class RoulleteComponent {
       this.container.addChild(tile);
       this.tiles.push(tile);
     }
-
   }
-  
+
   isDismissed() {
     return this.container.alpha == 0;
   }

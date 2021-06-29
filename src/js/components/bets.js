@@ -96,8 +96,6 @@ export default class BetsComponent {
 
   addAtPosition(i, num=1) {
     const field = this.fields[i];
-    if (field.value >= config.max_bet_per_tile) return;
-
     field.value = field.value + num;
     field.setText(field.value, (num > 0));
 

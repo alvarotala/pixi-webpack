@@ -73,10 +73,10 @@ const f = {
 
     runsequencial(100,
       () => gpio.send.ledstripAnimation(animations.ledstrip.idle(200)),
-      () => gpio.send.keyledAnimation('idle', animations.keyled.idle(50))
+      () => gpio.send.keyledAnimation(animations.keyled.idle(50))
     );
 
-    playSound('chiptronical', { loop: true });
+    playSound(1, 'chiptronical', { loop: true });
     // reggaetonn en 8bits.. asco, pero para el pila..
     // https://www.youtube.com/watch?v=W0CXLk0BtvM
   },

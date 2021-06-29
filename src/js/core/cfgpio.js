@@ -49,7 +49,7 @@ const inputsHandler = (event) => {
       }
       break;
     case "C":
-      file.audit('COIN', 'ADD', parseInt(data[0]));
+      file.audit('COIN', 'ADD', data[0]);
       dispatch('addcoins', parseInt(data[0]));
       break;
     case "E":
@@ -121,9 +121,17 @@ export const setGPIOInterface = () => {
 
     lightsOff: () => {
       runsequencial(100,
-        () => sendDataToGPIO('L:0,0,0,0$1'),
-        () => sendDataToGPIO('B:0000000000000000,0$1')
+        () => gpio.send.ledstripOff(),
+        () => gpio.send.keyledOff()
       );
+    },
+
+    ledstripOff: () => {
+      sendDataToGPIO('L:0,0,0,0$1');
+    },
+
+    keyledOff: () => {
+      sendDataToGPIO('B:0000000000000000,0$1');
     },
 
     ledstripAnimation: (sequences, times=0) => {
@@ -132,18 +140,9 @@ export const setGPIOInterface = () => {
       return sendDataToGPIO('L:'+seqstr+'$'+times);
     },
 
-    keyledAnimationLock: false,
-    keyledAnimation: (name, sequences, times=0) => {
+    keyledAnimation: (sequences, times=0) => {
       if (debugLevel == 1) return;
-      if (name !== true && name == gpio.send.keyledAnimationName) return;
       if (!gpio.mapping) return;
-      gpio.send.keyledAnimationName = name;
-
-      if (name === true) { // check shared lock..
-        if (gpio.send.keyledAnimationLock === true) return;
-        gpio.send.keyledAnimationLock = true;
-        setHandledTimeout(() => { gpio.send.keyledAnimationLock = false }, 300);
-      }
 
       const seqstr = sequences.map((seq) => {
         const tmparr = [];
@@ -153,7 +152,12 @@ export const setGPIOInterface = () => {
         return tmparr.join('')+'00,'+seq[1];
       }).join('#');
 
-      return sendDataToGPIO('B:'+seqstr+'$'+times);
+      const str = 'B:'+seqstr+'$'+times;
+      if (str == gpio.send.keyledAnimationLock) return;
+      gpio.send.keyledAnimationLock = str;
+
+      // console.log('>> keyledAnimation');
+      return sendDataToGPIO(str);
     },
 
     foo: null

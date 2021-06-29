@@ -15,6 +15,8 @@ import BetsComponent from './components/bets.js'
 import ScoreComponent from './components/score.js'
 import BonusComponent from './components/bonus.js'
 
+import MenuComponent from './components/menu.js'
+
 // TODO: Jackpot
 // import JackpotComponent from './components/jackpot.js'
 
@@ -54,6 +56,8 @@ export default class UIManager {
       .add('scorebg', config.path_assets + '/images/scorebg.png')
       .add('particle', config.path_assets + '/images/particle.png')
 
+      .add('menu_background', config.path_assets + '/images/menu_background.png')
+
       // Animations
       .add('strawberry', config.path_assets + '/animations/strawberry.json')
       .add('strawberry2', config.path_assets + '/animations/strawberry2.json')
@@ -68,17 +72,24 @@ export default class UIManager {
       // Audios
       .add('chiptronical', config.path_assets + '/audios/chiptronical.ogg')
 
-      .add('playingintro', config.path_assets + '/audios/mixkit-arcade-score-interface-217.wav')
-      .add('roulletespin', config.path_assets + '/audios/mixkit-arcade-bonus-alert-767.wav')
-      .add('roulletestep', config.path_assets + '/audios/mixkit-unlock-game-notification-253.wav')
-      .add('roulletewin', config.path_assets + '/audios/mixkit-magic-sweep-game-trophy-257.wav')
-      .add('roulletelos', config.path_assets + '/audios/mixkit-negative-game-notification-249.wav')
-      .add('roulletelucky', config.path_assets + '/audios/mixkit-arcade-approved-mission-205.wav')
+      .add('roulletemain', config.path_assets + '/audios/roulletemain.mp3')
+      .add('playingintro', config.path_assets + '/audios/playingintro.wav')
+      .add('roulletespin', config.path_assets + '/audios/roulletespin.wav')
+      .add('roulletestep', config.path_assets + '/audios/roulletestep.wav')
+      .add('roulletewin', config.path_assets + '/audios/roulletewin.wav')
+      .add('roulletelos', config.path_assets + '/audios/roulletelos.wav')
+      .add('roulletelucky', config.path_assets + '/audios/roulletelucky.wav')
 
-      .add('addbet', config.path_assets + '/audios/mixkit-arcade-game-jump-coin-216.wav')
-      .add('addcoins', config.path_assets + '/audios/mixkit-fairy-arcade-sparkle-866.wav')
+      .add('addbet', config.path_assets + '/audios/addbet.wav')
+      .add('addcoins', config.path_assets + '/audios/addcoins.wav')
 
-      .add('bonusintro', config.path_assets + '/audios/mixkit-arcade-bonus-229.wav')
+      .add('bonusintro', config.path_assets + '/audios/bonusintro.wav')
+      .add('bonuswin', config.path_assets + '/audios/bonuswin.wav')
+      .add('bonuslos', config.path_assets + '/audios/bonuslos.wav')
+      .add('bonusinitspin', config.path_assets + '/audios/bonusinitspin.mp3')
+      .add('bonustickspin', config.path_assets + '/audios/bonustickspin.mp3')
+      .add('bonusmain', config.path_assets + '/audios/bonusmain.mp3')
+
 
     return await promise((resolve) => {
       PIXI.Loader.shared.load((loader, resources) => {
@@ -98,6 +109,9 @@ export default class UIManager {
     this.components.bets          = new BetsComponent();
     this.components.score         = new ScoreComponent();
     this.components.bonus         = new BonusComponent();
+
+
+    this.components.menu          = new MenuComponent();
 
     // TODO: Jackpot
     // this.components.jackpot       = new JackpotComponent();

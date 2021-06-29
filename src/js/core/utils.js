@@ -83,14 +83,17 @@ export const getSound = (name) => {
   return PIXI.Loader.shared.resources[name].sound;
 }
 
-export const playSound = (name, options = {}) => {
+export const playSound = (group, name, options = {}) => {
   // if (debugLevel == 1) return;
-  // sound.volumeAll = config.master_volume;
+  // sound.volumeAll = config.local.master_volume;
   if (options.volume == undefined) {
      options.volume = 1;
   }
 
-  options.volume = Math.min(options.volume, config.master_volume);
+  // check if can play music..
+  if (group == 1 && config.local.music == 0) return;
+
+  options.volume = Math.min(options.volume, config.local.master_volume);
   getSound(name).play(options);
 };
 

@@ -1,7 +1,7 @@
 import * as PIXI from 'pixi.js'
 import config from '../config.js'
 
-import {AnimatedNumberField} from '../etc/TextField.js'
+import { AnimatedNumberField, SimpleText } from '../etc/TextField.js'
 
 import { Actions, Interpolations } from 'pixi-actions';
 import Easing from '../etc/easing.js'
@@ -43,6 +43,15 @@ export default class ScoreComponent {
 
     this.container.addChild(this.fields.credits);
 
+
+    this.points = new SimpleText(110, 50, '0000');
+    this.points.pivot.set(55, 25);
+    this.points.text.style.fontSize = 30;
+    this.points.x = config.width / 2;
+    this.points.y = 104;
+
+    this.points.visible = false;
+    this.container.addChild(this.points);
   }
 
   addAtField(n, num=1) {
@@ -55,6 +64,17 @@ export default class ScoreComponent {
     const field = this.fields[n];
     field.value = 0;
     field.setText(0, false);
+  }
+
+  setPoints(num) {
+    if (num == 0) {
+      this.points.visible = false;
+      this.points.setText('');
+      return;
+    }
+
+    this.points.setText('+'+num);
+    this.points.visible = true;
   }
 
   animateShow() {

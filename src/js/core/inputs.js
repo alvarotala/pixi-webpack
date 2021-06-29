@@ -22,7 +22,7 @@ global.inputsListener = null;
 
 export const dispatch = (name, object) => {
   if (inputsListener == null) return;
-  log(">> dispatch:", name, object);
+  // log(">> dispatch:", name, object);
 
   // if defined.. executes before all..
   if (inputsListener.before != null && inputsListener.before != undefined) {

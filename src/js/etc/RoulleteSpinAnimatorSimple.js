@@ -121,7 +121,7 @@ export default class RoulleteSpinAnimatorSimple {
 
     this.emitter.updateOwnerPos(cursor_tile.x + this.roullete.container.x, cursor_tile.y + this.roullete.container.y);
 
-    playSound('roulletestep');
+    playSound(0, 'roulletestep', { volume: 0.6 });
   }
 
   async complete() {

@@ -5,7 +5,7 @@ import { ContextError } from './contexts/error.js'
 import { ContextIdle } from './contexts/idle.js'
 import { ContextPlaying } from './contexts/playing.js'
 import { ContextBonus } from './contexts/bonus.js'
-
+import { ContextMenu } from './contexts/menu.js'
 
 
 
@@ -20,6 +20,8 @@ setContextsDescriptor({
   idle: ContextIdle,
   playing: ContextPlaying,
   bonus: ContextBonus,
+
+  menu: ContextMenu,
 
   // TODO: Jackpot
   // jackpot: ContextJackpot,

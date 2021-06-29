@@ -32,6 +32,14 @@ import './core/prototypes.js'
 import storage from './core/storage.js'
 
 
+// load settings from internal storage..
+config.local = storage.getObject('local');
+if (config.local == null) {
+  config.local = { master_volume: 1, music: 1 };
+  storage.setObject('local', config.local);
+}
+
+
 // check raspi temp
 // cat /sys/class/thermal/thermal_zone0/temp
 
@@ -42,15 +50,15 @@ import storage from './core/storage.js'
 
 PIXI.settings.PRECISION_VERTEX = PIXI.PRECISION.LOW; // PIXI.PRECISION.HIGH /// MEDIUM
 PIXI.settings.STRICT_TEXTURE_CACHE = false;
-PIXI.settings.GC_MAX_IDLE = 20000; // 3600
-PIXI.settings.GC_MAX_CHECK_COUNT = 2000; // 600
+// PIXI.settings.GC_MAX_IDLE = 20000; // 3600
+// PIXI.settings.GC_MAX_CHECK_COUNT = 2000; // 600
 PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
 
 PIXI.settings.PREFER_ENV = PIXI.ENV.WEBGL_LEGACY;
 // PIXI.settings.PREFER_ENV = PIXI.ENV.WEBGL2;
 
 PIXI.settings.SORTABLE_CHILDREN = false;
-PIXI.settings.SPRITE_BATCH_SIZE = 2048; // 4096;
+// PIXI.settings.SPRITE_BATCH_SIZE = 2048; // 4096;
 PIXI.settings.TARGET_FPMS = 0.03; // 0.06
 
 // PIXI.settings.GC_MODE = PIXI.GC_MODES.MANUAL; // PIXI.GC_MODES.AUTO

@@ -1,6 +1,6 @@
 import * as PIXI from 'pixi.js'
 import config from '../config.js'
-import { next } from '../core/utils.js'
+import { next, playSound } from '../core/utils.js'
 import { AnimatedNumberField } from '../etc/TextField.js'
 
 import { Actions, Interpolations } from 'pixi-actions';
@@ -172,12 +172,14 @@ export default class BonusComponent {
     if (this.isplaying) return;
     this.oncomplete = oncomplete;
 
+    this.field.setBackgroundColor(selection ? 0xbd6306 : 0x330245);
+
+    this.speed = this.getSpeedWithTargetFromCurrentRotation(target);
+
     this.isplaying = true;
     this.decelerating = false;
     this.brakes = null;
-    this.speed = this.getSpeedWithTargetFromCurrentRotation(target);
 
-    this.field.setBackgroundColor(selection ? 0xbd6306 : 0x330245);
     this.animateBig();
   }
 
@@ -223,8 +225,6 @@ export default class BonusComponent {
     this.isplaying = false;
     this.speed = 0;
 
-    console.log(this.roullete.rotation, this.getRoulletePosition(this.roullete.rotation));
-
     this.oncomplete(this.getRoulleteResult());
   }
 
@@ -236,6 +236,12 @@ export default class BonusComponent {
 
     if (this.isplaying) {
 
+      const tic = this.getRoulleteResult();
+      if (tic != this.previoustick) {
+        this.previoustick = tic;
+        playSound(0, 'bonustickspin', { volume: 0.3 });
+      }
+
       if (this.speed < this.speedlimit && this.decelerating != true) {
         this.speed = Math.min(this.speedlimit, this.speed + this.accrate);
         return // accelerate
@@ -243,6 +249,7 @@ export default class BonusComponent {
 
       this.decelerating = true;
       this.speed-=this.desrate; // 0.0003
+
 
       if (this.speed < this.stopdelta) {  // stop
         this.endsLoopAnimation();

@@ -3,18 +3,16 @@ const config = {
   width   : 720,
   height  : 1280,
 
-  master_volume: 0.0, /// 0.2
-
   autostart_interrupts: 4,
   settings_pin: '446544',
-  autostart_timeout: 5, // seconds
+  autostart_timeout: 1, // seconds
 
 
   idle_timeout: 10, /// seconds
 
   max_bet_per_tile: 33,
 
-  bonus_rate: 70, // 85, // % no winnings.. this is the probability "the house" have..
+  bonus_rate: 65, // 85, // % no winnings.. this is the probability "the house" have..
 
   path_assets : './assets',
 
