@@ -197,13 +197,18 @@ export const file = {
 
   getsession: (callback) => {
     file.r(session_path, (num) => {
-      if (num == null) return callback(0);
-      callback(parseInt(num));
+      if (num == null || num == undefined) return callback(0);
+      const inum = parseInt(num);
+      if (isNaN(inum)) return callback(0);
+
+      console.log('inum', inum);
+
+      callback(inum);
     });
   },
 
   setsession: (num) => {
-    if (num == NaN || num == null || num == undefined) return;
+    if (isNaN(num) || num == null || num == undefined) return;
     file.w(session_path, num.toString());
   }
 

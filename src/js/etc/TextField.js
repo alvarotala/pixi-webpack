@@ -76,23 +76,26 @@ export class AnimatedNumberField extends TextField {
 
   setText(text, animated=true) {
     super.setText(text);
+    if (!animated || this.animation == true) return;
+    this.animation = true;
 
-    if (this.action == undefined) {
-      this.action = Actions.parallel(
-        Actions.sequence(
-          Actions.scaleTo( this.text, 1.4, 1.4, 0.3, Easing.easeInQuad ),
-          Actions.scaleTo( this.text, 1.0, 1.0, 0.5, Easing.easeOutQuad )
-        ),
+    const action = Actions.parallel(
+      Actions.sequence(
+        Actions.scaleTo( this.text, 1.4, 1.4, 0.3, Easing.easeInQuad ),
+        Actions.scaleTo( this.text, 1.0, 1.0, 0.5, Easing.easeOutQuad )
+      ),
 
-        Actions.sequence(
-          Actions.moveTo( this.background, 0, 3, 0.5, Easing.easeInQuad ),
-          Actions.moveTo( this.background, 0, 0, 0.3, Easing.easeOutQuad )
-        )
-      );
-    }
+      Actions.sequence(
+        Actions.moveTo( this.background, 0, 3, 0.5, Easing.easeInQuad ),
+        Actions.moveTo( this.background, 0, 0, 0.3, Easing.easeOutQuad )
+      )
+    );
 
-    if (!animated) return;
-    this.action.play();
+    action.queue(Actions.runFunc(() => {
+      this.animation = false;
+    }));
+
+    action.play();
   }
 
 }

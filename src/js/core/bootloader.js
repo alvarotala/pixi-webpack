@@ -155,7 +155,7 @@ class Bootloader {
       const k = key.split(':');
       if (k[0] != 'numpad') return;
       const num = parseInt(k[1]);
-      if (num == NaN) return;
+      if (isNaN(num)) return;
 
       settings_auth_pin.push((num + 1));
       settings_auth_update_screen();
