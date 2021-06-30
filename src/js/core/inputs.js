@@ -24,6 +24,13 @@ export const dispatch = (name, object) => {
   if (inputsListener == null) return;
   // log(">> dispatch:", name, object);
 
+  if (name == 'error') {
+    const error = inputsListener.error;
+    if (error != null && error != undefined) {
+      return error(object);
+    }
+  }
+
   // if defined.. executes before all..
   if (inputsListener.before != null && inputsListener.before != undefined) {
     inputsListener.before(name, object);

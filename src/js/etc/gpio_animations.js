@@ -22,6 +22,13 @@ export const animations = {
 
   keyled: {
 
+    flash: (ms = 100) => {
+      return [
+        [[1,1,1, 1,1,1, 1,1,1,1,1,1,1,1], ms],
+        [[0,0,0, 0,0,0, 0,0,0,0,0,0,0,0], ms]
+      ];
+    },
+
     idle: (ms) => {
 
       let out = [];

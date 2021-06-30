@@ -27,11 +27,19 @@ export const setContext = (name, params = null) => {
   context.init(params);
 
   if (context.inputs) {
+    if (context.inputs.error == undefined) {
+      context.inputs.error = errorContextHandler;
+    }
+
     setInputListener(context.inputs);
   }
 };
 
-export const dispatchError = (code, data = {}) => {
-  file.audit('ERR', code);
-  setContext('error', {code: code, data: data});
+// default error context..
+const errorContextHandler = (params) => {
+  if (params == null) params = { code: 404 };
+  if (params.data == undefined) params.data = 0;
+
+  file.audit('ERR', params.code, params.data);
+  setContext('error', params);
 };

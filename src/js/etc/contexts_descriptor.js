@@ -5,6 +5,7 @@ import { ContextError } from './contexts/error.js'
 import { ContextIdle } from './contexts/idle.js'
 import { ContextPlaying } from './contexts/playing.js'
 import { ContextBonus } from './contexts/bonus.js'
+import { ContextCashout } from './contexts/cashout.js'
 import { ContextMenu } from './contexts/menu.js'
 
 
@@ -20,13 +21,12 @@ setContextsDescriptor({
   idle: ContextIdle,
   playing: ContextPlaying,
   bonus: ContextBonus,
+  cashout: ContextCashout,
 
   menu: ContextMenu,
 
   // TODO: Jackpot
   // jackpot: ContextJackpot,
-
-  settings: {
-    coineractive: false,
-  }
+  
+  foo: null
 });

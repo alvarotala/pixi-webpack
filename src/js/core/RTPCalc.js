@@ -22,14 +22,14 @@ const r = {
   },
 
   simulate: (algorithm, maxplaces, maxbet) => {
-    console.log('***********************    RTP Simulated machine \n\n\n\n');
+    console.log('***********************    RTP Simulated machine \n\n');
 
     let credits   = 0;
     let wins      = 0;
     let current   = 0;
 
     let i = 0;
-    while(i < 1000000) { // Play spin.. 100 millones -> 100000000
+    while(i < 100000) { // Play spin.. 100 millones -> 100000000
       const bets = r.getrandombets(8, maxplaces, maxbet);
 
       // const bets = [1,1,1,1,1,1,1,1];
@@ -83,8 +83,6 @@ const r = {
 
     console.log('>> results:', credits, wins, diff);
     console.log(">> RTP:", rtp);
-
-    console.log(logger);
   },
 
   getrandombets: (total, maxplaces, maxbet) => {
@@ -273,4 +271,4 @@ global.RTPCalc = {
 };
 
 
-RTPCalc.r.simulate(r.algorithms.interpolate, 5, 2);
+RTPCalc.r.simulate(r.algorithms.interpolate, 8, 3);

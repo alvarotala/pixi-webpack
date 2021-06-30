@@ -119,13 +119,13 @@ export const fadeOutSound = (name, speed = 0.1, ms = 50) => {
 };
 
 
-let config_path, counters_path, audit_path, berror_path;
+let config_path, counters_path, audit_path, berror_path, session_path;
 export const set_basepath = (path) => {
   config_path   = path + "/cfconfig.json";
   audit_path    = path + "/cfaudit.log";
   berror_path   = path + "/cfgpio_error.data";
 
-  counters_path = path + "/cfcounters.json";
+  session_path = path + "/cfsession.data";
 
   console.info("***** config.base_path", path);
 };
@@ -174,11 +174,37 @@ export const file = {
   },
 
   getberror: (callback) => {
-    file.r(berror_path, callback);
+    file.r(berror_path, (data) => {
+      if (data == null) {
+        return callback(null);
+      }
+      const parts = data.split(':');
+      if (parts[0] != 'E' && parts.length == 3) {
+        return callback(null);
+      }
+
+      if (parts[1] == '0') {
+        return callback(null);
+      }
+
+      callback({code: parseInt(parts[1]), data: parseInt(parts[2])})
+    });
   },
 
-  setberror: (data) => {
-    file.w(error_path, data, 'w');
+  clearberror: () => {
+    file.w(berror_path, 'E:0:0', 'w');
+  },
+
+  getsession: (callback) => {
+    file.r(session_path, (num) => {
+      if (num == null) return callback(0);
+      callback(parseInt(num));
+    });
+  },
+
+  setsession: (num) => {
+    if (num == NaN || num == null || num == undefined) return;
+    file.w(session_path, num.toString());
   }
 
 };

@@ -4,8 +4,8 @@ const config = {
   height  : 1280,
 
   autostart_interrupts: 4,
-  settings_pin: '446544',
-  autostart_timeout: 1, // seconds
+  settings_pin: '1111',
+  autostart_timeout: 5, // seconds
 
 
   idle_timeout: 10, /// seconds

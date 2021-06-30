@@ -4,7 +4,7 @@ import config from './config.js'
 import { Actions } from 'pixi-actions';
 
 import { setContext } from './core/contexts.js'
-import { promise, playSound, clearAllTasks, next } from './core/utils.js'
+import { file, promise, playSound, clearAllTasks, next } from './core/utils.js'
 
 
 import './etc/contexts_descriptor.js'
@@ -54,7 +54,10 @@ export default class UIManager {
       .add('tile_hover', config.path_assets + '/images/tile_hover.png')
       .add('betsbg', config.path_assets + '/images/betsbg.png')
       .add('scorebg', config.path_assets + '/images/scorebg.png')
+
+
       .add('particle', config.path_assets + '/images/particle.png')
+      .add('particle_coin', config.path_assets + '/images/particle_coin.png')
 
       .add('menu_background', config.path_assets + '/images/menu_background.png')
 
@@ -118,7 +121,17 @@ export default class UIManager {
 
     app.ticker.add(actionsticker);
 
-    next(1000, () => setContext('idle'));
+    next(2000, () => {
+      file.getsession((num) => {
+        if (num == 0) {
+          setContext('idle')
+          return;
+        }
+
+        ui.components.score.addAtField('wins', num);
+        setContext('playing');
+      });
+    });
   }
 
   stopAll() {

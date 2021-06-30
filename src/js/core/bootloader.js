@@ -24,11 +24,13 @@ class Bootloader {
 
       gpio.send.disableAll();
 
+      // check if installed..
+      // if not, set keymapo first!
       if (storage.get('installed') != 'yes') {
           this.settings_keymap();
           return;
       }
-      
+
       file.getconfig((object) => {
         if (object == null) {
           // Block machine.. cant read config file..
@@ -41,7 +43,36 @@ class Bootloader {
         this.mapping = object.mapping
         global.app.config = object;
 
+        this.check_clean_start();
+      });
+    });
+  }
+
+  check_clean_start() {
+    file.getberror((error) => {
+      if (error == null) {
+        // no error.. normal start
         this.autostart_init();
+        return;
+      }
+
+      this.error = error;
+      const errorn = error.data;
+
+      file.getsession((num) => {
+        this.session = num + errorn;
+
+        terminal.clear();
+        terminal.append('-> ERROR: ' + error.code);
+        terminal.newline();
+
+        terminal.append('-> CREDITOS: ' + this.session);
+        terminal.newline(2);
+
+        terminal.newline();
+        terminal.append('Técnico requerido para desbloquear..');
+
+        next(4000, () => this.settings_auth());
       });
     });
   }
@@ -100,6 +131,15 @@ class Bootloader {
 
     const settings_auth_update_screen = () => {
       terminal.clear();
+
+      if (this.error != undefined) {
+        terminal.append('-> ERROR: ' + this.error.code);
+        terminal.newline();
+
+        terminal.append('-> CREDITOS: ' + this.session);
+        terminal.newline(2);
+      }
+
       terminal.append("-> Ingresar PIN de acceso:");
       terminal.newline()
 
@@ -135,7 +175,10 @@ class Bootloader {
 
           file.audit('ADM', 'AUT', 'ERR');
           terminal.append("-> Acceso denegado.");
-          next(1000, this.start_game.bind(this));
+
+          if (this.error == undefined) { // only if no error...
+            next(1000, this.start_game.bind(this));
+          }
         });
       }
     });
@@ -150,22 +193,36 @@ class Bootloader {
     terminal.append('-> Configuracion de sistema');
     terminal.newline(2);
 
-    terminal.append('1- Cargar');
-    terminal.append('2- Retirar');
+    if (this.error != undefined) {
+      terminal.append('---> ERROR: ' + this.error.code);
+      terminal.newline();
+
+      terminal.append('---> CREDITOS: ' + this.session);
+      terminal.newline(2);
+    }
+
+    terminal.append('1- Configurar botonera');
+    terminal.append('2- Configurar pantalla');
 
     terminal.newline();
 
-    terminal.append('3- Desbloquear');
+    if (this.error == undefined) {
 
-    terminal.newline();
+      terminal.append('3- Cargar');
+      terminal.append('4- Retirar');
 
-    terminal.append('4- Configurar botonera');
-    terminal.append('5- Configurar pantalla');
+      terminal.newline();
 
-    terminal.newline();
+      terminal.append('7- Guardar configuraciones');
+      terminal.append('8- Iniciar juego');
+    }
 
-    terminal.append('7- Guardar configuraciones');
-    terminal.append('8- Iniciar juego');
+
+    else { // handle errors first!
+      terminal.append('6- Desbloquear error');
+      terminal.newline();
+    }
+
 
     this.keymapListener((key) => {
       switch (key) {
@@ -179,24 +236,44 @@ class Bootloader {
           this.settings_screen();
           break;
 
-        case 'numpad:2': // set keys mapping
-          this.resetscreen();
-          this.settings_keymap();
+
+        case 'numpad:2': // cargar
+          if (this.error != undefined) return;
           break;
 
-        case 'numpad:3': // channge screen size & position
-          this.settings_screen();
+        case 'numpad:3': // retirar
+          if (this.error != undefined) return;
           break;
+
+
+        case 'numpad:5': // reset errors
+          this.reset_error();
+          break;
+
 
         case 'numpad:6': // save all data and register device to server..
+          if (this.error != undefined) return;
           this.settings_save();
           break;
 
-        case 'numpad:7': // save all data and register device to server..
+        case 'numpad:7': // start game!
+          if (this.error != undefined) return;
           this.start_game();
           break;
       }
     });
+  }
+
+  reset_error() {
+    if (this.error == undefined) return;
+    this.resetscreen();
+    terminal.append('Limpiando errores...');
+
+    file.setsession(this.session);
+    file.clearberror();
+
+    this.error = undefined;
+    next(4000, () => this.settings_main());
   }
 
   // setup keys mapping

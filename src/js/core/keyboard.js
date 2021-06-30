@@ -1,4 +1,5 @@
 import { dispatch } from './inputs.js'
+import { file }  from './utils.js'
 
 const keyboardHandler = (e) => {
   // e.preventDefault();
@@ -39,6 +40,13 @@ const keyboardHandler = (e) => {
 
   if (e.key == 'c') {
     dispatch('addcoins', 100);
+  }
+
+  if (e.key == 'v') {
+    ui.components.score.resetField('wins');
+    ui.components.score.resetField('credits');
+    ui.components.bets.reset();
+    file.setsession(0);
   }
 
   // numpad

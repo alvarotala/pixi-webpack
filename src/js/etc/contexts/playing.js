@@ -20,10 +20,15 @@ import { setContext } from '../../core/contexts.js'
 import { animations } from '../gpio_animations.js'
 
 
+let canPlay = false;
+let spining = false;
+
 let activityTimeoutRef = null;
 let activityIntervalRef = null;
 
 const startActivityInterval = () => {
+  if (debugLevel == 1) return;
+
   if (activityIntervalRef != null) return;
 
   if (activityTimeoutRef != null) {
@@ -31,12 +36,11 @@ const startActivityInterval = () => {
     activityTimeoutRef = null;
   }
 
-  // ignore if in debug mode..
-  if (debugLevel == 1) return;
-  if (currentContext != 'playing') return;
+  console.log("> starting activity checker");
 
   activityIntervalRef = setHandledInterval(() => {
     if (currentContext != 'playing') return; // check..
+    if (spining) return;
 
     let foundedActivity = false;
 
@@ -57,11 +61,21 @@ const startActivityInterval = () => {
     activityIntervalRef = null;
 
     // start timeout callback..
-    activityTimeoutRef = setHandledTimeout(gotoIdleContext, config.idle_timeout * 1000);
+    activityTimeoutRef = setHandledTimeout(async () => {
+      activityTimeoutRef = null;
+      if (currentContext != 'playing') return;
+
+      ui.components.bets.animateDismiss();
+      ui.components.score.animateDismiss();
+
+      setContext('idle');
+    }, config.idle_timeout * 1000);
   }, 5000);
 }
 
 const cancelActivityTimeout = () => {
+  console.log("> cancel activity checker");
+
   if (activityTimeoutRef != null) {
     clearHandledTimeout(activityTimeoutRef);
     activityTimeoutRef = null;
@@ -73,19 +87,16 @@ const cancelActivityTimeout = () => {
   }
 };
 
-const gotoIdleContext = async () => {
-  activityTimeoutRef = null;
-
-  ui.components.bets.animateDismiss();
-  await pause(100);
-
-  ui.components.score.animateDismiss();
-  await pause(300);
-
-  setContext('idle');
-};
-
 const updateState = async () => {
+  if (debugLevel == 1) return;
+  if (currentContext != 'playing') return;
+
+  const csf = ui.components.score.fields;
+  const btotal = ui.components.bets.total();
+
+  // set session value
+  file.setsession(csf.credits.value + csf.wins.value + btotal);
+
   const keys = [0,0,0, 0,0,0, 0,0,0,0,0,0,0,0];
 
   if (spining) {
@@ -95,7 +106,7 @@ const updateState = async () => {
   }
 
   // if credits..
-  if (ui.components.score.fields.wins.value > 0) {
+  if (csf.wins.value > 0) {
     keys[0] = 2;
     keys[2] = 2;
   }
@@ -113,7 +124,7 @@ const updateState = async () => {
       keys[5] = 1; /// can play..
     }
 
-    if (ui.components.score.fields.credits.value > 0) {
+    if (csf.credits.value > 0) {
       for(let i=0;i<8;++i) keys[i+6]=2;
     }
   }
@@ -138,10 +149,8 @@ const cantPlayLastGame = () => {
 };
 
 
-let canPlay = false;
-let spining = false;
-
 const spin = async () => {
+  if (currentContext != 'playing') return;
   if (!canPlay) return;
   if (spining) return;
 
@@ -204,14 +213,15 @@ const spin = async () => {
   const animator = new RoulleteSpinAnimatorSimple();
   await animator.run(steps);
 
-  // if context error, do nothing..
-  if (currentContext != 'playing') return;
-
-  next(500, () => spincompleted(pay));
+  next(500, () => completed(pay));
 };
 
 
-const spincompleted = (pay) => {
+const completed = (pay) => {
+  if (currentContext != 'playing') return;
+  if (!canPlay) return;
+  if (!spining) return;
+
   const i = ui.components.roullete.current;
   const selected = config.roullete_tiles[i];
 
@@ -222,9 +232,6 @@ const spincompleted = (pay) => {
   ui.components.bets.showLastValues();
 
   ui.components.bets.select(selected.bet);
-
-
-  // log("> selected:", selected);
 
   gpio.send.ledstripAnimation(animations.ledstrip.playing_default());
 
@@ -258,6 +265,7 @@ const spincompleted = (pay) => {
 
     ui.components.score.setPoints(pay);
     ui.components.score.addAtField('wins', pay);
+
     playSound(0, 'roulletewin');
   }
 
@@ -267,6 +275,8 @@ const spincompleted = (pay) => {
 
   updateState();
 }
+
+
 
 export const ContextPlaying = {
   coineractive: true,
@@ -302,14 +312,24 @@ export const ContextPlaying = {
 
   inputs: {
 
+    left: () => {
+      ui.components.score.addAtField('credits', 20);
+    },
+
     before: startActivityInterval,
     after: updateState,
 
     play: () => spin(),
 
-    left: () => {
-      if (debugLevel >= 0)
-        ui.components.score.addAtField('credits', 20);
+    pay: () => {
+      if (debugLevel == 1) return;
+      if (!canPlay) return;
+      if (spining) return;
+
+      // check for wins before..
+      if (ui.components.score.fields.wins.value <= 0) return;
+
+      setContext('cashout');
     },
 
     option: () => {
@@ -336,24 +356,6 @@ export const ContextPlaying = {
 
       ui.components.bets.reset();
       ui.components.score.addAtField('credits', bets);
-    },
-
-    pay: () => {
-      if (spining) return;
-      const num = ui.components.score.fields.wins.value;
-      if (num <= 0) return;
-
-      // DEV: Test
-      // if (num == 0) {
-      //   gpio.send.hopperReleaseCoins(1);
-      //   return;
-      // }
-
-      const csf = ui.components.score.fields;
-      file.audit('GAME', 'PAYOUT', csf.credits.value, num);
-
-      ui.components.score.resetField('wins');
-      gpio.send.hopperReleaseCoins(num);
     },
 
     numpad: (index) => {

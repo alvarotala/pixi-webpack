@@ -12,18 +12,21 @@ import * as particles from 'pixi-particles'
 import { animations } from './gpio_animations.js'
 
 
-// TODO: el tiempo de la jugada debe influir enn el resultado
-// si el jugador tarda mucho vs tarda poco..
-// la maquina deberia medir ese tiempo y calcular que accion tomar
-// si pagar o cobrar..
 
 export default class RoulleteSpinAnimatorSimple {
 
   constructor() {
     this.roullete = ui.components.roullete;
 
-    const particle = [PIXI.Loader.shared.resources.particle.texture]
-    this.emitter = new particles.Emitter(ui.particles, particle, _particle_config);
+    if (this.roullete.emitter == undefined) {
+      const particle = [PIXI.Loader.shared.resources.particle.texture]
+      this.roullete.emitter = new particles.Emitter(ui.particles, particle, _particle_config);
+
+      this.roullete.emitterticker = (delta) => {
+        this.roullete.emitter.update(delta*0.0015); // 0.005
+      };
+      app.ticker.add(this.roullete.emitterticker);
+    }
   }
 
   async run(steps) {
@@ -32,16 +35,9 @@ export default class RoulleteSpinAnimatorSimple {
     // await pause(1000);
 
     const cursor_tile = this.roullete.tiles[this.roullete.current];
-    this.emitter.updateOwnerPos(cursor_tile.x + this.roullete.container.x, cursor_tile.y + this.roullete.container.y);
+    this.roullete.emitter.updateOwnerPos(cursor_tile.x + this.roullete.container.x, cursor_tile.y + this.roullete.container.y);
 
     gpio.send.ledstripAnimation(animations.ledstrip.flash(66), 6);
-
-    this.emitterticker = (delta) => {
-      if (this.emitter) {
-        this.emitter.update(delta*0.0015); // 0.005
-      }
-    };
-
     gpio.send.ledstripAnimation(animations.ledstrip.fade(66))
 
     let speedx    = 5;
@@ -70,8 +66,7 @@ export default class RoulleteSpinAnimatorSimple {
       }
 
       app.ticker.add(this.ticker);
-      app.ticker.add(this.emitterticker);
-      this.emitter.emit = true;
+      this.roullete.emitter.emit = true;
     })
 
     await this.complete();
@@ -119,7 +114,7 @@ export default class RoulleteSpinAnimatorSimple {
 
     ui.components.bets.multipliers.next();
 
-    this.emitter.updateOwnerPos(cursor_tile.x + this.roullete.container.x, cursor_tile.y + this.roullete.container.y);
+    this.roullete.emitter.updateOwnerPos(cursor_tile.x + this.roullete.container.x, cursor_tile.y + this.roullete.container.y);
 
     playSound(0, 'roulletestep', { volume: 0.6 });
   }
@@ -135,10 +130,7 @@ export default class RoulleteSpinAnimatorSimple {
     this.roullete.animateScale(0.7, 10, 1.0, 0.5, [current]); // 0.7, -11
     Actions.scaleTo( current, 1.15, 1.15, 0.5, Easing.easeInQuad ).play();
 
-    this.emitter.emit = false;
-    app.ticker.remove(this.emitterticker);
-    this.emitter.destroy();
-    this.emitter = null;
+    this.roullete.emitter.emit = false;
   }
 
 }

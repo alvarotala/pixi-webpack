@@ -12,9 +12,11 @@ const dismiss = () => {
   if (currentContext != 'bonus') return;
   if (isPlaying) return;
 
-  if (ui.components.bonus.amount > 0) {
-    ui.components.score.setPoints(ui.components.bonus.amount);
-    ui.components.score.addAtField('wins', ui.components.bonus.amount);
+  const bonus = ui.components.bonus;
+
+  if (bonus.amount > 0) {
+    ui.components.score.setPoints(bonus.amount);
+    ui.components.score.addAtField('wins', bonus.amount);
   }
 
   ui.components.bonus.animateDismiss();
@@ -24,6 +26,8 @@ const dismiss = () => {
 const completed = (result) => {
   if (currentContext != 'bonus') return;
 
+  const csf = ui.components.score.fields;
+
   const bonus = ui.components.bonus;
   isPlaying = false;
 
@@ -31,6 +35,8 @@ const completed = (result) => {
   if (result == currentSelection) {
     bonus.amount *= 2;
     bonus.field.setText(bonus.amount);
+
+    file.setsession(csf.credits.value + csf.wins.value + bonus.amount);
 
     runsequencial(100,
       () => gpio.send.ledstripAnimation(animations.ledstrip.fade(200)),
@@ -43,8 +49,11 @@ const completed = (result) => {
     return; // win.. play again?
   }
 
+
   bonus.amount = 0; // lose all
   bonus.field.setText(bonus.amount);
+
+  file.setsession(csf.credits.value + csf.wins.value);
 
   // TODO: play loser sound..
   next(2000, dismiss);
@@ -100,6 +109,9 @@ export const ContextBonus = {
 
   init: (params) => {
     currentSelection = null;
+
+    const csf = ui.components.score.fields;
+    file.setsession(csf.credits.value + csf.wins.value + params.amount);
 
     ui.components.bonus.amount = params.amount;
     ui.components.bonus.animateShow();

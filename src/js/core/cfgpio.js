@@ -4,7 +4,7 @@ import storage from './storage.js'
 import { log, promise, pause, runsequencial, file, setHandledTimeout } from './utils.js'
 
 import { dispatch } from './inputs.js'
-import { setContext, dispatchError } from './contexts.js'
+import { setContext } from './contexts.js'
 
 
 export const mapsetup = ['pay', 'left', 'right', 'option', 'cancel', 'play', 'numpad:0', 'numpad:1', 'numpad:2', 'numpad:3', 'numpad:4', 'numpad:5', 'numpad:6', 'numpad:7'];
@@ -49,11 +49,16 @@ const inputsHandler = (event) => {
       }
       break;
     case "C":
-      file.audit('COIN', 'ADD', data[0]);
+      file.audit('COIN', 'A', data[0]);
       dispatch('addcoins', parseInt(data[0]));
       break;
+    case "H":
+      file.audit('HOPPER', data[0]);
+      dispatch('hopper', {status: parseInt(data[0])});
+      break;
     case "E":
-      dispatchError(parseInt(data[0]));
+      file.audit('ERROR', data[0], data[1]);
+      dispatch('error', {code: parseInt(data[0]), data: parseInt(data[1])});
       break;
   }
 }
@@ -79,7 +84,7 @@ export const mapGPIOtoInputs = () => {
 
   gpio.mapping = app.config.mapping;
   gpio.socket.onmessage = inputsHandler;
-  gpio.socket.onclose = (e) => dispatchError(1001);
+  gpio.socket.onclose = (e) => dispatch('error', {code: 1001});
 }
 
 export const rawGPIOListener = (callback) => {
