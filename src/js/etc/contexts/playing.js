@@ -111,6 +111,11 @@ const updateState = async () => {
     keys[2] = 2;
   }
 
+  // if credits..
+  if (csf.credits.value > 0) {
+    keys[1] = 2;
+  }
+
   // if any placed bet..
   if (ui.components.bets.total() > 0) {
     keys[4] = 2;
@@ -312,10 +317,6 @@ export const ContextPlaying = {
 
   inputs: {
 
-    left: () => {
-      ui.components.score.addAtField('credits', 20);
-    },
-
     before: startActivityInterval,
     after: updateState,
 
@@ -339,6 +340,15 @@ export const ContextPlaying = {
       setContext('menu');
     },
 
+    left: () => {
+      if (spining) return;
+      const credits = ui.components.score.fields.credits.value;
+      if (credits < 1) return;
+
+      ui.components.score.addAtField('wins', 1)
+      ui.components.score.addAtField('credits', -1)
+    },
+
     right: () => {
       if (spining) return;
       const wins = ui.components.score.fields.wins.value;
@@ -347,6 +357,8 @@ export const ContextPlaying = {
       ui.components.score.addAtField('credits', 1)
       ui.components.score.addAtField('wins', -1)
     },
+
+
 
     cancel: () => {
       if (spining) return;

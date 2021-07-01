@@ -271,4 +271,4 @@ global.RTPCalc = {
 };
 
 
-RTPCalc.r.simulate(r.algorithms.interpolate, 8, 3);
+RTPCalc.r.simulate(r.algorithms.interpolate, 8, 5);

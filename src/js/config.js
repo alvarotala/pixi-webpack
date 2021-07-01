@@ -4,7 +4,8 @@ const config = {
   height  : 1280,
 
   autostart_interrupts: 4,
-  settings_pin: '1111',
+  settings_pin: '114465448',
+  // settings_pin: '1111',
   autostart_timeout: 5, // seconds
 
 
@@ -12,7 +13,7 @@ const config = {
 
   max_bet_per_tile: 33,
 
-  bonus_rate: 65, // 85, // % no winnings.. this is the probability "the house" have..
+  bonus_rate: 75, // 85, // % no winnings.. this is the probability "the house" have..
 
   path_assets : './assets',
 

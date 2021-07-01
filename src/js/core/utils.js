@@ -119,13 +119,13 @@ export const fadeOutSound = (name, speed = 0.1, ms = 50) => {
 };
 
 
-let config_path, counters_path, audit_path, berror_path, session_path;
+let config_path, counters_path, audit_path, berror_path, session_path, cashdata_path;
 export const set_basepath = (path) => {
   config_path   = path + "/cfconfig.json";
   audit_path    = path + "/cfaudit.log";
   berror_path   = path + "/cfgpio_error.data";
-
-  session_path = path + "/cfsession.data";
+  session_path  = path + "/cfsession.data";
+  cashdata_path = path + "/cfcash.data";
 
   console.info("***** config.base_path", path);
 };
@@ -210,6 +210,19 @@ export const file = {
   setsession: (num) => {
     if (isNaN(num) || num == null || num == undefined) return;
     file.w(session_path, num.toString());
+  },
+
+  updatecash: (type, num) => {
+    if (type != 'in' && type != 'out') return;
+    if (isNaN(num)) return;
+
+    const filep = cashdata_path +'.'+ type;
+
+    file.r(filep, (n) => {
+      let nn = parseInt(n);
+      if (isNaN(nn)) nn = 0;
+      file.w(filep, (nn + num).toString());
+    });
   }
 
 };

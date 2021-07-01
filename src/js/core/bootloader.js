@@ -239,10 +239,12 @@ class Bootloader {
 
         case 'numpad:2': // cargar
           if (this.error != undefined) return;
+          this.settings_set_amount("in");
           break;
 
         case 'numpad:3': // retirar
           if (this.error != undefined) return;
+          this.settings_set_amount("out");
           break;
 
 
@@ -406,6 +408,100 @@ class Bootloader {
     await pause(2000);
 
     this.settings_main();
+  }
+
+
+  settings_set_amount(delta) {
+    this.resetscreen();
+
+    const update_screen = () => {
+      terminal.clear();
+
+      if (delta == 'in') {
+        terminal.append('-> Cargar monedas a hopper.');
+      }
+
+      if (delta == 'out') {
+        terminal.append('-> Retirar monedas de hopper.');
+      }
+
+      terminal.newline(2);
+
+      terminal.append('1 - (+) 1000');
+      terminal.append('2 - (+) 100');
+      terminal.append('3 - (+) 10');
+      terminal.append('4 - (+) 1');
+      terminal.append('5 - (-) 1');
+      terminal.append('6 - (-) 10');
+      terminal.append('7 - (-) 100');
+      terminal.append('8 - (-) 1000');
+      terminal.newline(2);
+
+      terminal.append('[Cancelar] - Volver');
+      terminal.append('[Pagar]    - Confirmar');
+
+      terminal.newline(3);
+
+      terminal.append("-> Ingresar cantidad de monedas:");
+      terminal.newline()
+
+      terminal.append('   [ ' + amount + ' ]');
+    };
+
+
+    let amount = 0;
+    update_screen();
+
+    this.keymapListener((key) => {
+      switch (key) {
+
+        case 'play':
+          file.updatecash(delta, amount);
+          return this.settings_main();
+
+        case 'cancel':
+          return this.settings_main();
+
+        case 'numpad:0':
+          amount+=1000;
+          break;
+
+        case 'numpad:1':
+          amount+=100;
+          break;
+
+        case 'numpad:2':
+          amount+=10;
+          break;
+
+        case 'numpad:3':
+          amount+=1;
+          break;
+
+
+        case 'numpad:4':
+          amount-=1;
+          if (amount<0)amount=0;
+          break;
+
+        case 'numpad:5':
+          amount-=10;
+          if (amount<0)amount=0;
+          break;
+
+        case 'numpad:6':
+          amount-=100;
+          if (amount<0)amount=0;
+          break;
+
+        case 'numpad:7':
+          amount-=1000;
+          if (amount<0)amount=0;
+          break;
+      }
+
+      update_screen();
+    });
   }
 
 
