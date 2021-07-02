@@ -20,7 +20,7 @@ const config = {
   base_path: '/home/alvarotala/cfdata',
   debug_base_path: '/Users/alvaro/Desktop/cfdata',
 
-  cfgpio_url: 'ws://127.0.0.1:8080',
+  cfgpio_url: 'ws://localhost:8080',
   cfgpio_remote_debug: 'ws://192.168.100.90:8080',
 
   roullete_bets: [

@@ -24,18 +24,12 @@ class Bootloader {
 
       gpio.send.disableAll();
 
-      // check if installed..
-      // if not, set keymapo first!
-      if (storage.get('installed') != 'yes') {
-          this.settings_keymap();
-          return;
-      }
-
       file.getconfig((object) => {
         if (object == null) {
-          // Block machine.. cant read config file..
-          terminal.clear();
-          terminal.append('ERROR: 3045');
+
+          // check if installed..
+          // if not, set keys mapping first!
+          this.settings_keymap();
           return;
         }
 
