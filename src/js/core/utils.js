@@ -126,7 +126,7 @@ export const set_basepath = (path) => {
   berror_path   = path + "/cfgpio_error.data";
   session_path  = path + "/cfsession.data";
   cashdata_path = path + "/cfcash.data";
-
+  
   console.info("***** config.base_path", path);
 };
 

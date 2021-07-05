@@ -21,6 +21,20 @@ const r = {
     });
   },
 
+  preheat: (limit, algorithm) => {
+    console.log('***********************    RTP Preheat machine \n\n');
+
+    let current   = 0;
+
+    let i = 0;
+    while(i < limit) {
+      const steps  = algorithm({from: current, bets: [1,1,1,1,1,1,1,1], total: 8}); // steps
+      const pos = r.poswithdistance(current, steps);
+      current = pos;
+      i++;
+    }
+  },
+
   simulate: (algorithm, maxplaces, maxbet, limit) => {
     console.log('***********************    RTP Simulated machine \n\n');
 
@@ -168,7 +182,7 @@ const r = {
     test2: (params) => {
       const { from, bets, total } = params;
       if (srandom() >= 0.1) { // low probs
-        const scales = config.roullete_bets_scales;
+        const scales = config.loaded.roullete_bets_scales;
         const cursor = Math.ceil(srandom() * 100);
 
         let pos = 0;
@@ -192,7 +206,7 @@ const r = {
     test3: (params) => {
       const { from, bets, total } = params;
       if (srandom() >= 0.2) { // 0.2 = 89 0.3 = 98    = RTP 0.25 = 94%
-        const scales = config.roullete_bets_scales;
+        const scales = config.loaded.roullete_bets_scales;
         const cursor = Math.ceil(srandom() * 100);
 
         const smallonly = srandom() < 0.6;
@@ -235,7 +249,7 @@ const r = {
       }
 
       const getbetwithscale = (cursor) => {
-        const scales = config.roullete_bets_scales;
+        const scales = config.loaded.roullete_bets_scales;
         let pos = 0;
         for (let i = 0; i<scales.length; i++) {
           const dist = pos + scales[i];
@@ -250,7 +264,7 @@ const r = {
 
 
       /// jackpot?
-      if (srandom() < (config.jackpot_rate * 0.01)) {
+      if (srandom() < (config.loaded.jackpot_rate * 0.01)) {
         return findtile((t) => (t.jackpot != undefined));
       }
 
@@ -287,7 +301,7 @@ const r = {
       }
 
       /// jackpot?
-      if (srandom() < (config.jackpot_rate * 0.01)) {
+      if (srandom() < (config.loaded.jackpot_rate * 0.01)) {
         const tiles = findtiles((t) => (t.jackpot != undefined));
         // console.log(">>> JACKPOT !!!");
 
@@ -322,7 +336,7 @@ const r = {
         const pos = r.poswithdistance(from, i);
         const tile = r.tiles[pos];
 
-        let scale = config.roullete_transform_scales[pos];
+        let scale = config.loaded.roullete_transform_scales[pos];
 
         /// if jackpot, skip..
         if (tile.jackpot != undefined) {
@@ -332,7 +346,7 @@ const r = {
         if (tile.multiplier != undefined) {
           const mv = r.getmultiplier(i, tile.multiplier); // value
           const mi = config.multipliers[tile.multiplier].indexOf(mv); // index
-          scale = config.multipliers_transform_scales[tile.multiplier][mi];
+          scale = config.loaded.multipliers_transform_scales[tile.multiplier][mi];
         }
 
         for (let a = 0; a<scale; a++) {
@@ -357,9 +371,5 @@ r.setup();
 global.RTPCalc = {
   r: r,
   addentropy: addentropy,
-
-  currentAlgorithm: r.algorithms.test5,
+  currentAlgorithm: r.algorithms.random,
 };
-
-
-RTPCalc.r.simulate(r.algorithms.test5, 8, 8, 10000);

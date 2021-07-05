@@ -3,18 +3,14 @@ const config = {
   width   : 720,
   height  : 1280,
 
-  autostart_interrupts: 4,
+
   settings_pin: '114465448',
   // settings_pin: '1111',
+
+  autostart_interrupts: 4,
   autostart_timeout: 5, // seconds
 
-
   idle_timeout: 10, /// seconds
-
-  max_bet_per_tile: 33,
-
-  bonus_rate: 65, // 85, // % no winnings.. this is the probability "the house" have..
-  jackpot_rate: 5, // 5%
 
   path_assets : './assets',
 
@@ -23,6 +19,10 @@ const config = {
 
   cfgpio_url: 'ws://localhost:8080',
   cfgpio_remote_debug: 'ws://192.168.100.90:8080',
+
+  max_bet_per_tile: 33,
+
+  multipliers:        {big: [30, 20, 10], small: [10, 5, 3]},
 
   roullete_bets: [
     'bar',        /// 0
@@ -33,40 +33,6 @@ const config = {
     'bell',       /// 5
     'grapes',     /// 6
     'orange',     /// 7
-  ],
-
-  // algorithms.test4
-  roullete_bets_scales: [1, 12, 13, 13, 15, 15, 15, 16], // percents must sum 100
-
-
-  // algorithms.test5
-
-  // orange5        20 5 x 4
-  // orange2        20 5 x 4
-
-  // grapes         mult
-  // grapes2        20 20 x 1
-  // bell           mult
-  // bell2          20 20 x 1
-  // strawberry     mult
-  // strawberry2    20 20 x 1
-
-  // watermelon     mult
-  // watermelon2    20 20 x 1
-  // banana         mult
-  // banana2        20 20 x 1
-  // 77             mult
-  // 772            20 20 x 1
-
-  // bar50          1
-  // bar100         1
-
-  multipliers_transform_scales: {big: [3, 5, 10], small: [5, 10, 14]},
-  roullete_transform_scales: [
-    0,  0,  1,  1,  5, 20,
-    0,  0, 20, -1,  5, 20,
-    0,  0, 20,  0,  5, 20,
-    0,  0, 20, -1,  5, 20
   ],
 
   roullete_tiles: [
@@ -97,7 +63,24 @@ const config = {
   ],
 
 
-  multipliers:        {big: [30, 20, 10], small: [10, 5, 3]},
+  defaults: {
+
+    bonus_rate: 65, // 85, // % no winnings.. this is the probability "the house" have..
+    bonus_max: 100,
+
+    jackpot_rate: 5, // 5%
+
+    // algorithms.test4
+    roullete_bets_scales: [1, 12, 13, 13, 15, 15, 15, 16], // percents must sum 100
+    multipliers_transform_scales: {big: [3, 5, 10], small: [5, 10, 14]},
+    roullete_transform_scales: [
+      0,  0,  1,  1,  5, 20,
+      0,  0, 20, -1,  5, 20,
+      0,  0, 20,  0,  5, 20,
+      0,  0, 20, -1,  5, 20
+    ],
+
+  },
 
   foo: null
 }

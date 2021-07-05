@@ -163,10 +163,28 @@ import { inputsWithKeyboard } from './core/keyboard.js' // add keyboard support
 import { bootloader } from './core/bootloader.js'
 import { log, file, set_basepath, promise } from './core/utils.js'
 
-set_basepath((debugLevel == 0) ? config.base_path : config.debug_base_path);
+const cfdata_dir = (debugLevel == 0) ? config.base_path : config.debug_base_path
+set_basepath(cfdata_dir);
 
 
 
+if (config.loaded == undefined) {
+  config.loaded = config.defaults;
+  file.readjson(cfdata_dir + '/cfload.conf', (data) => {
+    console.log('config.loaded', cfdata_dir, data);
+
+    if (data != null) {
+      config.loaded = data;
+    }
+  });
+}
+
+import './core/RTPCalc.js'
+
+RTPCalc.currentAlgorithm = RTPCalc.r.algorithms.test5;
+RTPCalc.r.preheat(10000, RTPCalc.currentAlgorithm);
+
+// RTPCalc.r.simulate(RTPCalc.r.algorithms.test5, 8, 8, 10000);
 
 // load game
 // TODO: move specific game files to folder to make dynamic..
@@ -211,10 +229,6 @@ const loadGameEngine = async () => {
 
   bootloader(config.cfgpio_url, loadGameEngine);
 })();
-
-
-
-import './core/RTPCalc.js'
 
 
 // TODOs:
