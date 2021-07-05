@@ -340,7 +340,7 @@ const r = {
         }
       }
 
-      roullete.shuffle();
+      // roullete.shuffle();
       // console.log(roullete);
 
       const cursor = Math.floor(srandom() * roullete.length);
@@ -362,4 +362,4 @@ global.RTPCalc = {
 };
 
 
-RTPCalc.r.simulate(r.algorithms.test5, 8, 8, 100000);
+RTPCalc.r.simulate(r.algorithms.test5, 8, 8, 10000);

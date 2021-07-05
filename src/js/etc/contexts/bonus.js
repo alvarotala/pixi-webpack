@@ -78,7 +78,7 @@ const playWithSelection = async (selection) => {
 
   let num = Math.random() < (config.bonus_rate * 0.01) ? 1 : 0; // 1 = change selection, 0 = user wins
 
-  if (ui.components.bonus.amount >= 50) { // if greather than 50 points........
+  if (ui.components.bonus.amount >= 100) { // if greather than 100 points........
     num = 1;//......
   }
 
@@ -105,7 +105,7 @@ const playWithSelection = async (selection) => {
   await pause(300);
 
   ui.components.bonus.play(selection, target, completed);
-  playSound(0, 'bonusinitspin', { volume: 0.4 })
+  playSound(0, 'bonusinitspin', { volume: 0.8 })
 };
 
 export const ContextBonus = {

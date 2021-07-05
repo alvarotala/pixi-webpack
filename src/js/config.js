@@ -13,7 +13,7 @@ const config = {
 
   max_bet_per_tile: 33,
 
-  bonus_rate: 75, // 85, // % no winnings.. this is the probability "the house" have..
+  bonus_rate: 65, // 85, // % no winnings.. this is the probability "the house" have..
   jackpot_rate: 5, // 5%
 
   path_assets : './assets',
@@ -61,7 +61,7 @@ const config = {
   // bar50          1
   // bar100         1
 
-  multipliers_transform_scales: {big: [2, 3, 5], small: [3, 5, 10]},
+  multipliers_transform_scales: {big: [3, 5, 10], small: [5, 10, 14]},
   roullete_transform_scales: [
     0,  0,  1,  1,  5, 20,
     0,  0, 20, -1,  5, 20,
@@ -98,6 +98,7 @@ const config = {
 
 
   multipliers:        {big: [30, 20, 10], small: [10, 5, 3]},
+
   foo: null
 }
 
