@@ -14,6 +14,7 @@ const config = {
   max_bet_per_tile: 33,
 
   bonus_rate: 75, // 85, // % no winnings.. this is the probability "the house" have..
+  jackpot_rate: 5, // 5%
 
   path_assets : './assets',
 
@@ -34,9 +35,39 @@ const config = {
     'orange',     /// 7
   ],
 
-  // roullete_tiles_scales: [5, 10, 10, 10, 15, 15, 15, 20], // percents
-  roullete_tiles_scales: [1, 12, 13, 13, 15, 15, 15, 16], // percents must sum 100
-  // roullete_tiles_scales: [2, 10, 10, 10, 16, 16, 16, 20], // percents must sum 100
+  // algorithms.test4
+  roullete_bets_scales: [1, 12, 13, 13, 15, 15, 15, 16], // percents must sum 100
+
+
+  // algorithms.test5
+
+  // orange5        20 5 x 4
+  // orange2        20 5 x 4
+
+  // grapes         mult
+  // grapes2        20 20 x 1
+  // bell           mult
+  // bell2          20 20 x 1
+  // strawberry     mult
+  // strawberry2    20 20 x 1
+
+  // watermelon     mult
+  // watermelon2    20 20 x 1
+  // banana         mult
+  // banana2        20 20 x 1
+  // 77             mult
+  // 772            20 20 x 1
+
+  // bar50          1
+  // bar100         1
+
+  multipliers_transform_scales: {big: [2, 3, 5], small: [3, 5, 10]},
+  roullete_transform_scales: [
+    0,  0,  1,  1,  5, 20,
+    0,  0, 20, -1,  5, 20,
+    0,  0, 20,  0,  5, 20,
+    0,  0, 20, -1,  5, 20
+  ],
 
   roullete_tiles: [
     {texture: 'strawberry', bet: 4, points: 1, multiplier: 'small', bonus: true}, //
@@ -66,8 +97,7 @@ const config = {
   ],
 
 
-  multipliers: {big: [30, 20, 10], small: [10, 5, 3]},
-
+  multipliers:        {big: [30, 20, 10], small: [10, 5, 3]},
   foo: null
 }
 

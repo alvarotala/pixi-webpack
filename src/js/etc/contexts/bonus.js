@@ -76,9 +76,13 @@ const playWithSelection = async (selection) => {
   currentSelection = selection;
 
 
-  const num = Math.random() < (config.bonus_rate * 0.01) ? 1 : 0; // 1 = change selection, 0 = user wins
-  const target = Math.abs(selection - num);
+  let num = Math.random() < (config.bonus_rate * 0.01) ? 1 : 0; // 1 = change selection, 0 = user wins
 
+  if (ui.components.bonus.amount >= 50) { // if greather than 50 points........
+    num = 1;//......
+  }
+
+  const target = Math.abs(selection - num);
 
   const cbonus = ui.components.bonus;
   const csf = ui.components.score.fields;

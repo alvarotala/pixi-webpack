@@ -139,7 +139,7 @@ export const file = {
   },
 
   r: (path, callback) => {
-    if (!window.electron) return;
+    if (!window.electron) return callback(null);
     window.electron.file.read(path, (success, data) => {
       if (!success) callback(null);
       callback(data);

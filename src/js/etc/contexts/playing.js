@@ -177,12 +177,13 @@ const spin = async () => {
 
   // const asteps  = RTPCalc.r.algorithms.test1(current, bets, btotal); // steps
 
-  const asteps  = RTPCalc.r.algorithms.interpolate(current, bets, btotal); // steps
+  const asteps  = RTPCalc.currentAlgorithm({from: current, bets: bets, total: btotal}); // steps
 
   const pos     = RTPCalc.r.poswithdistance(current, asteps);
 
   const tile    = config.roullete_tiles[pos];
-  const pay     = RTPCalc.r.getpoints(tile, bets, asteps);
+  const points  = RTPCalc.r.getpoints(tile, asteps);
+  const pay     = points * bets[tile.bet];
 
   // disable coiner
 
