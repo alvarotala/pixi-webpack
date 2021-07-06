@@ -179,61 +179,6 @@ const r = {
       return num;
     },
 
-    test2: (params) => {
-      const { from, bets, total } = params;
-      if (srandom() >= 0.1) { // low probs
-        const scales = config.loaded.roullete_bets_scales;
-        const cursor = Math.ceil(srandom() * 100);
-
-        let pos = 0;
-        for (let i = 0; i<scales.length; i++) {
-          const dist = pos + scales[i];
-          if(cursor > pos && cursor <= dist) {
-            const tiles = [];
-            r.tiles.forEach((t, a) => {
-              if (t.bet == i) tiles.push(a);
-            });
-
-            return tiles[Math.floor(srandom() * tiles.length)];
-          }
-          pos=dist;
-        }
-      }
-
-      return Math.floor(srandom() * r.len);
-    },
-
-    test3: (params) => {
-      const { from, bets, total } = params;
-      if (srandom() >= 0.2) { // 0.2 = 89 0.3 = 98    = RTP 0.25 = 94%
-        const scales = config.loaded.roullete_bets_scales;
-        const cursor = Math.ceil(srandom() * 100);
-
-        const smallonly = srandom() < 0.6;
-
-        let pos = 0;
-        for (let i = 0; i<scales.length; i++) {
-          const dist = pos + scales[i];
-          if(cursor > pos && cursor <= dist) {
-            const tiles = [];
-
-            r.tiles.forEach((t, a) => {
-              if (smallonly && t.bet == i && t.multiplier == undefined) {
-                tiles.push(a);
-              }
-              else if (!smallonly && t.bet == i) tiles.push(a);
-            });
-
-            const sel = tiles[Math.floor(srandom() * tiles.length)];
-            return ((r.len - from) + sel) % r.len;
-          }
-          pos=dist;
-        }
-      }
-
-      return Math.floor(srandom() * r.len);
-    },
-
     test4: (params) => {
       const { from, bets, total } = params;
 
@@ -249,7 +194,7 @@ const r = {
       }
 
       const getbetwithscale = (cursor) => {
-        const scales = config.loaded.roullete_bets_scales;
+        const scales = config.roullete_bets_scales;
         let pos = 0;
         for (let i = 0; i<scales.length; i++) {
           const dist = pos + scales[i];

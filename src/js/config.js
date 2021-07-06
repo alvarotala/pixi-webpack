@@ -4,8 +4,8 @@ const config = {
   height  : 1280,
 
 
-  settings_pin: '114465448',
-  // settings_pin: '1111',
+  settings_pin: '1144654488',
+  // settings_pin: '8888',
 
   autostart_interrupts: 4,
   autostart_timeout: 5, // seconds
@@ -70,8 +70,6 @@ const config = {
 
     jackpot_rate: 5, // 5%
 
-    // algorithms.test4
-    roullete_bets_scales: [1, 12, 13, 13, 15, 15, 15, 16], // percents must sum 100
     multipliers_transform_scales: {big: [3, 5, 10], small: [5, 10, 14]},
     roullete_transform_scales: [
       0,  0,  1,  1,  5, 20,
@@ -80,7 +78,12 @@ const config = {
       0,  0, 20, -1,  5, 20
     ],
 
+    auth: []
   },
+
+
+  // algorithms.test4
+  roullete_bets_scales: [1, 12, 13, 13, 15, 15, 15, 16], // percents must sum 100
 
   foo: null
 }

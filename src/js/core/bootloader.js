@@ -138,11 +138,33 @@ class Bootloader {
       terminal.newline()
 
       const pin = [];
-      for(let i=0; i<config.settings_pin.length; i++) {
+      for(let i=0; i<10; i++) {
         pin.push(settings_auth_pin.length > i ? "*" : '-');
       }
 
       terminal.append('   [ ' + pin.join(' ') + ' ]');
+    };
+
+    const checkpass = () => {
+      const inp = settings_auth_pin.join('');
+      if (inp == config.settings_pin) {
+        file.audit('ADM', 'AUTH', '0');
+        return true;
+      }
+
+      if (config.loaded != undefined) {
+        if (config.loaded.auth != undefined && config.loaded.auth.length > 0) {
+          for (let i=0; i<config.loaded.auth.length; i++) {
+            const p = config.loaded.auth[i];
+            if (p[1] == inp) {
+              file.audit('ADM', 'AUTH', p[0]);
+              return true;
+            }
+          }
+        }
+      }
+
+      return false;
     };
 
     this.keymapListener((key) => {
@@ -154,26 +176,26 @@ class Bootloader {
       settings_auth_pin.push((num + 1));
       settings_auth_update_screen();
 
-      if (settings_auth_pin.length >= config.settings_pin.length) {
+      if (checkpass() == true) {
         removeGPIOListeners();
 
-        next(500, () => {
+        return next(500, () => {
           terminal.newline();
-          if (settings_auth_pin.join('') == config.settings_pin) {
-            terminal.append("-> Acceso autorizado..");
-
-            file.audit('ADM', 'AUT', 'SCC');
-            next(500, this.settings_main.bind(this));
-            return;
-          }
-
-          file.audit('ADM', 'AUT', 'ERR');
-          terminal.append("-> Acceso denegado.");
-
-          if (this.error == undefined) { // only if no error...
-            next(1000, this.start_game.bind(this));
-          }
+          terminal.append("-> Acceso autorizado..");
+          next(500, this.settings_main.bind(this));
         });
+      }
+
+      if (settings_auth_pin.length >= 10) {
+        removeGPIOListeners();
+        terminal.newline();
+
+        file.audit('ADM', 'AUTH', 'ERR');
+        terminal.append("-> Acceso denegado.");
+
+        if (this.error == undefined) { // only if no error...
+          next(1000, this.start_game.bind(this));
+        }
       }
     });
 
@@ -326,8 +348,8 @@ class Bootloader {
     terminal.append('2- (  →  ) mover derecha');
     terminal.newline(1);
 
-    terminal.append('1- (  ↑  ) mover arriba');
-    terminal.append('2- (  ↓  ) mover abajo');
+    terminal.append('3- (  ↓  ) mover abajo');
+    terminal.append('4- (  ↑  ) mover arriba');
     terminal.newline(1);
 
     terminal.append('5- ( << >> ) agrandar');
@@ -349,12 +371,12 @@ class Bootloader {
           break;
 
 
-        case 'numpad:2': // move up
-          terminal.container.y--;
+        case 'numpad:2': // move down
+          terminal.container.y++;
           break;
 
-        case 'numpad:3': // move down
-          terminal.container.y++;
+        case 'numpad:3': // move up
+          terminal.container.y--;
           break;
 
 
