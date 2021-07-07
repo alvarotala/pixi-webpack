@@ -65,17 +65,17 @@ const config = {
 
   defaults: {
 
-    bonus_rate: 65, // 85, // % no winnings.. this is the probability "the house" have..
+    bonus_rate: 75, // 85, // % no winnings.. this is the probability "the house" have..
     bonus_max: 100,
 
     jackpot_rate: 5, // 5%
 
-    multipliers_transform_scales: {big: [3, 5, 10], small: [5, 10, 14]},
+    multipliers_transform_scales: {big: [3, 5, 10], small: [5, 10, 15]},
     roullete_transform_scales: [
-      0,  0,  1,  1,  5, 20,
-      0,  0, 20, -1,  5, 20,
-      0,  0, 20,  0,  5, 20,
-      0,  0, 20, -1,  5, 20
+      0,  0,  2,  1,  6, 20,
+      0,  0, 20, -1,  6, 20,
+      0,  0, 20,  0,  6, 20,
+      0,  0, 20, -1,  6, 20
     ],
 
     auth: []
