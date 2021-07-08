@@ -9,8 +9,8 @@ import { animations } from '../gpio_animations.js'
 import { Actions, Interpolations } from 'pixi-actions';
 
 const animateRelease = () => {
-  gpio.send.keyledAnimation(animations.keyled.flash(100));
-  gpio.send.ledstripAnimation(animations.ledstrip.flash(100));
+  gpio.send.keyledAnimation([[[1,1,1, 1,1,1, 1,1,1,1,1,1,1,1], 50]]);
+  gpio.send.ledstripAnimation([[0,1,0,50]]);
 
   const field = ui.components.score.fields.wins.text;
 
@@ -70,9 +70,9 @@ const f = {
     file.audit('GAME', 'CASHOUT', wins, csf.credits.value, btotal);
     file.setsession(wins + csf.credits.value + btotal);
 
-    gpio.send.hopperReleaseCoins(wins);
-
     animateRelease();
+
+    next(500, () => gpio.send.hopperReleaseCoins(wins));
   },
 
   inputs: {
