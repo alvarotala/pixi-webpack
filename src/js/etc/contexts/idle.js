@@ -12,6 +12,7 @@ import Easing from '../easing.js'
 
 import * as particles from 'pixi-particles'
 
+let isDismissing = false;
 
 const enterLoopAnimation = (delta) => {
   if (f.emitter == undefined) return;
@@ -73,10 +74,18 @@ const stopParticles = () => {
   // app.stage.filters = [];
 };
 
+const dismiss = () => {
+  if (isDismissing) return;
+  isDismissing = true;
+  next(700, () => setContext('playing'))
+}
+
 const f = {
   coineractive: true,
 
   init: () => {
+    isDismissing = false;
+
     f.logo = ui.components.background.logo;
     f.ticker = 3.4; // down the sine hill
 
@@ -115,9 +124,7 @@ const f = {
   },
 
   inputs: {
-    default: () => {
-      setContext('playing');
-    },
+    default: () => dismiss(),
 
     option: () => {
       if (f.option_pressed) return;
@@ -127,7 +134,7 @@ const f = {
 
     addcoins: (num) => {
       ui.components.score.addAtField('credits', num);
-      setContext('playing');
+      dismiss();
     }
   }
 };

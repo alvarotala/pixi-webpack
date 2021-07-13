@@ -5,12 +5,15 @@ import { setContext } from '../../core/contexts.js'
 
 import { animations } from '../gpio_animations.js'
 
+let canPlay = false;
 let isPlaying = false;
 let currentSelection = null;
 
 const dismiss = () => {
-  if (currentContext != 'bonus') return;
+  if (!canPlay) return;
   if (isPlaying) return;
+  if (currentContext != 'bonus') return;
+  canPlay = false;
 
   const bonus = ui.components.bonus;
 
@@ -67,14 +70,15 @@ const completed = (result) => {
 }
 
 const playWithSelection = async (selection) => {
+  if (!canPlay) return;
   if (isPlaying) return;
+  if (currentContext != 'bonus') return;
   if (ui.components.bonus.amount == 0) return;
-
-  getSound('bonusmain').volume = 0.3;
 
   isPlaying = true;
   currentSelection = selection;
 
+  getSound('bonusmain').volume = 0.3;
 
   let num = Math.random() < (config.loaded.bonus_rate * 0.01) ? 1 : 0; // 1 = change selection, 0 = user wins
 
@@ -113,6 +117,8 @@ export const ContextBonus = {
 
   init: (params) => {
     currentSelection = null;
+    isPlaying = false;
+    canPlay = false;
 
     const csf = ui.components.score.fields;
     file.setsession(csf.credits.value + csf.wins.value + params.amount);
@@ -127,6 +133,8 @@ export const ContextBonus = {
 
     playSound(0, 'bonusintro');
     playSound(1, 'bonusmain', { loop: true, volume: 0.7 });
+
+    next(600, () => { canPlay = true; });
   },
 
   dealloc: () => {

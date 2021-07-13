@@ -131,9 +131,10 @@ export default class RoulleteSpinAnimatorSimple {
     Actions.scaleTo( current, 1.15, 1.15, 0.5, Easing.easeInQuad ).play();
 
     this.roullete.emitter.emit = false;
+    await pause(600);
   }
 
 }
 
 // gas
-const _particle_config = {alpha:{start:1.0,end:0.2},scale:{start:1.2,end:3.0,minimumScaleMultiplier:1.95},color:{start:"#fcf200",end:"#be0000"},speed:{start:0,end:0,minimumSpeedMultiplier:1},acceleration:{x:0,y:0},maxSpeed:0,startRotation:{min:0,max:0},noRotation:true,rotationSpeed:{min:0,max:0},lifetime:{min:0.100,max:0.251},blendMode:"normal",frequency:0.008,emitterLifetime:-1,maxParticles:10,pos:{x:0,y:0},addAtBack:false,spawnType:"point"};
+const _particle_config = {alpha:{start:1.0,end:0.2},scale:{start:1.2,end:3.0,minimumScaleMultiplier:1.95},color:{start:"#fcf200",end:"#be0000"},speed:{start:0,end:0,minimumSpeedMultiplier:1},acceleration:{x:0,y:0},maxSpeed:0,startRotation:{min:0,max:0},noRotation:true,rotationSpeed:{min:0,max:0},lifetime:{min:0.100,max:0.251},blendMode:"normal",frequency:0.008,emitterLifetime:-1,maxParticles:8,pos:{x:0,y:0},addAtBack:false,spawnType:"point"};

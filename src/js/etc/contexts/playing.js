@@ -27,7 +27,7 @@ let activityTimeoutRef = null;
 let activityIntervalRef = null;
 
 const startActivityInterval = () => {
-  if (debugLevel == 1) return;
+  // if (debugLevel == 1) return;
 
   if (activityIntervalRef != null) return;
 
@@ -36,7 +36,7 @@ const startActivityInterval = () => {
     activityTimeoutRef = null;
   }
 
-  console.log("> starting activity checker");
+  // console.log("> starting activity checker");
 
   activityIntervalRef = setHandledInterval(() => {
     if (currentContext != 'playing') return; // check..
@@ -64,6 +64,7 @@ const startActivityInterval = () => {
     activityTimeoutRef = setHandledTimeout(async () => {
       activityTimeoutRef = null;
       if (currentContext != 'playing') return;
+      canPlay = false;
 
       ui.components.bets.animateDismiss();
       ui.components.score.animateDismiss();
@@ -74,7 +75,7 @@ const startActivityInterval = () => {
 }
 
 const cancelActivityTimeout = () => {
-  console.log("> cancel activity checker");
+  // console.log("> cancel activity checker");
 
   if (activityTimeoutRef != null) {
     clearHandledTimeout(activityTimeoutRef);
@@ -134,13 +135,25 @@ const updateState = async () => {
     }
   }
 
+  if (updateStateLazyTimer != null) {
+    clearHandledTimeout(updateStateLazyTimer)
+    updateStateLazyTimer = null;
+  }
+
+  updateStateLazyTimer = setHandledTimeout(() => updateStateLazy(keys), 200);
+}
+
+let updateStateLazyTimer = null;
+const updateStateLazy = (keys) => {
+  updateStateLazyTimer = null
+
   if (keys.reduce((a, b) => (a + b), 0) == 0) {
     gpio.send.keyledAnimation(animations.keyled.waiting());
     return;
   }
 
   gpio.send.keyledAnimation(animations.keyled.keyboard(keys));
-}
+};
 
 const cantPlayLastGame = () => {
   const credits = ui.components.score.fields.credits.value;
@@ -213,17 +226,21 @@ const spin = async () => {
 
   updateState();
 
+  await pause(200);
+
   playSound(0, 'roulletespin');
   getSound('roulletemain').volume = 1.0;
 
   const animator = new RoulleteSpinAnimatorSimple();
   await animator.run(steps);
 
-  next(500, () => completed(pay));
+  // next(500, () => completed(pay));
+
+  completed(pay)
 };
 
 
-const completed = (pay) => {
+const completed = async (pay) => {
   if (currentContext != 'playing') return;
   if (!canPlay) return;
   if (!spining) return;
@@ -241,10 +258,11 @@ const completed = (pay) => {
 
   gpio.send.ledstripAnimation(animations.ledstrip.playing_default());
 
+
   file.audit('GAME', 'SPINCOMP');
-  spining = false;
 
   getSound('roulletemain').volume = 0.5;
+
 
   // TODO: Jackpot
   // if (selected.jackpot != undefined) {
@@ -254,10 +272,12 @@ const completed = (pay) => {
 
   // Workaround: instead of Jackpot, users get a "free spin"..
   if (selected.jackpot != undefined) {
+    file.audit('GAME', 'FREESP');
     playSound(0, 'roulletelucky');
     updateState();
 
-    file.audit('GAME', 'FREESP');
+    await pause(300);
+    spining = false;
     return; // nothing happens.. just a free spin
   }
 
@@ -265,6 +285,10 @@ const completed = (pay) => {
 
   if (pay > 0) {
     if (selected.bonus == true) {
+      canPlay = false;
+      spining = false;
+
+      await pause(300);
       setContext('bonus', {amount: pay});
       return;
     }
@@ -279,6 +303,8 @@ const completed = (pay) => {
     playSound(0, 'roulletelos');
   }
 
+  await pause(300);
+  spining = false;
   updateState();
 }
 
