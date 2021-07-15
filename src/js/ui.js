@@ -62,6 +62,7 @@ export default class UIManager {
       .add('menu_background', config.path_assets + '/images/menu_background.png')
 
       // Animations
+      .add('luck', config.path_assets + '/animations/luck.json')
       .add('strawberry', config.path_assets + '/animations/strawberry.json')
       .add('strawberry2', config.path_assets + '/animations/strawberry2.json')
       .add('77', config.path_assets + '/animations/77.json')
@@ -70,6 +71,17 @@ export default class UIManager {
       .add('banana2', config.path_assets + '/animations/banana2.json')
       .add('bell', config.path_assets + '/animations/bell.json')
       .add('bell2', config.path_assets + '/animations/bell2.json')
+      .add('watermelon', config.path_assets + '/animations/watermelon.json')
+      .add('watermelon2', config.path_assets + '/animations/watermelon2.json')
+      .add('grapes', config.path_assets + '/animations/grapes.json')
+      .add('grapes2', config.path_assets + '/animations/grapes2.json')
+      .add('orange', config.path_assets + '/animations/orange.json')
+      .add('orange2', config.path_assets + '/animations/orange2.json')
+      .add('orange5', config.path_assets + '/animations/orange5.json')
+      .add('bar', config.path_assets + '/animations/bar.json')
+      .add('bar50', config.path_assets + '/animations/bar50.json')
+      .add('bar100', config.path_assets + '/animations/bar100.json')
+
 
 
       // Audios

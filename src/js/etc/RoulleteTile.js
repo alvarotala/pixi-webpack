@@ -33,20 +33,14 @@ export default class RoulleteTile extends PIXI.Container {
     this.hover.visible = false;
     this.addChild(this.hover);
 
-    // JUST FOR TEST
-    // hasta completar todas las animaciones que faltan
-    const animations = ['77', '772', 'banana', 'banana2', 'bell', 'bell2', 'strawberry', 'strawberry2'];
 
-    if (animations.includes(image)) {
-      const textures = PIXI.Loader.shared.resources[image];
-      this.image = new PIXI.AnimatedSprite(textures.spritesheet.animations[image]);
-      this.image.play();
-    }
+    const textures = PIXI.Loader.shared.resources[image];
+    this.image = new PIXI.AnimatedSprite(textures.spritesheet.animations[image]);
+    this.image.play();
+  
+    // const path = config.path_assets + '/images/tiles/'+image+'.png';
+    // this.image = new PIXI.Sprite.from(path);
 
-    else {
-      const path = config.path_assets + '/images/tiles/'+image+'.png';
-      this.image = new PIXI.Sprite.from(path);
-    }
 
     this.image.anchor.set(0.5);
 
