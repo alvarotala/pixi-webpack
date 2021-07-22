@@ -171,15 +171,17 @@ let preheat = false;
 config.loaded = config.defaults;
 RTPCalc.r.preheat(10000, RTPCalc.currentAlgorithm);
 
-// update config.loaded with interval...
-setInterval(() => {
+const loadConfigRemote = () => {
   file.readjson('/cfload.conf', (data) => {
     if (data != null) {
       config.loaded = data;
     }
   });
-}, 1000 * 60 * 10); /// every 10 minutes...
+};
 
+// update config.loaded with interval...
+setInterval(() => loadConfigRemote(), 1000 * 60 * 10); /// every 10 minutes...
+loadConfigRemote();
 
 // RTPCalc.r.simulate(RTPCalc.r.algorithms.test5, 8, 8, 10000);
 
