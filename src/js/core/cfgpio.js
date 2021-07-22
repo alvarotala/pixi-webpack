@@ -18,23 +18,6 @@ function getmapkeyname(pin) {
   return mapsetup[gpio.mapping.indexOf(pin)];
 }
 
-function sendDataToGPIO(str) {
-  return promise((resolve) => {
-    if (gpio.socket == null || gpio.socket == undefined) {
-      resolve(false);
-      return;
-    }
-
-    if (gpio.socket.readyState == WebSocket.OPEN) {
-      gpio.socket.send(str);
-      resolve(true);
-      return;
-    }
-
-    resolve(false);
-  });
-}
-
 const inputsHandler = (event) => {
   const data = event.data.split(":")
   const key  = data.shift();
@@ -77,6 +60,23 @@ export const startGPIOInterface = (host, callback) => {
     gpio.socket.onclose = null;
     callback(true)
   };
+};
+
+export const sendDataToGPIO = (str) => {
+  return promise((resolve) => {
+    if (gpio.socket == null || gpio.socket == undefined) {
+      resolve(false);
+      return;
+    }
+
+    if (gpio.socket.readyState == WebSocket.OPEN) {
+      gpio.socket.send(str);
+      resolve(true);
+      return;
+    }
+
+    resolve(false);
+  });
 };
 
 export const mapGPIOtoInputs = () => {

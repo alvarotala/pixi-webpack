@@ -161,28 +161,25 @@ global.gpio = {};
 import { setGPIOInterface } from './core/cfgpio.js'
 import { inputsWithKeyboard } from './core/keyboard.js' // add keyboard support
 import { bootloader } from './core/bootloader.js'
-import { log, file, set_basepath, promise } from './core/utils.js'
+import { log, file, promise } from './core/utils.js'
 
-const cfdata_dir = (debugLevel == 0) ? config.base_path : config.debug_base_path
-set_basepath(cfdata_dir);
+import './core/RTPCalc.js'
+RTPCalc.currentAlgorithm = RTPCalc.r.algorithms.test5;
 
 
+let preheat = false;
+config.loaded = config.defaults;
+RTPCalc.r.preheat(10000, RTPCalc.currentAlgorithm);
 
-if (config.loaded == undefined) {
-  config.loaded = config.defaults;
-  file.readjson(cfdata_dir + '/cfload.conf', (data) => {
-    console.log('config.loaded', cfdata_dir, data);
-
+// update config.loaded with interval...
+setInterval(() => {
+  file.readjson('/cfload.conf', (data) => {
     if (data != null) {
       config.loaded = data;
     }
   });
-}
+}, 1000 * 60 * 10); /// every 10 minutes...
 
-import './core/RTPCalc.js'
-
-RTPCalc.currentAlgorithm = RTPCalc.r.algorithms.test5;
-RTPCalc.r.preheat(10000, RTPCalc.currentAlgorithm);
 
 // RTPCalc.r.simulate(RTPCalc.r.algorithms.test5, 8, 8, 10000);
 

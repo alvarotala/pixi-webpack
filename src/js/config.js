@@ -4,7 +4,7 @@ const config = {
   height  : 1280,
 
 
-  settings_pin: '1144654488',
+  settings_pin: '11326478',
   // settings_pin: '8888',
 
   autostart_interrupts: 4,
@@ -15,10 +15,10 @@ const config = {
   path_assets : './assets',
 
   base_path: '/home/alvarotala/cfdata',
-  debug_base_path: '/Users/alvaro/Desktop/cfdata',
+  // base_path: '/Users/alvaro/Desktop/cfdata',
 
   cfgpio_url: 'ws://localhost:8080',
-  cfgpio_remote_debug: 'ws://192.168.100.90:8080',
+  cfgpio_remote_debug: 'ws://192.168.100.113:8080',
 
   max_bet_per_tile: 33,
 

@@ -46,7 +46,7 @@ const keyboardHandler = (e) => {
     ui.components.score.resetField('wins');
     ui.components.score.resetField('credits');
     ui.components.bets.reset();
-    file.setsession(0);
+    file.setnumber('/cfsession.data', 0);
   }
 
   // numpad

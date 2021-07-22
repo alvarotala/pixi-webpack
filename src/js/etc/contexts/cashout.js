@@ -21,41 +21,43 @@ const animateRelease = () => {
     field.scale.set(scale, scale);
   };
   app.ticker.add(f.ticker);
-
-
-  // TODO: Timeout...
-  // check for cfgpio errors..
-  // f.timeout = setHandledTimeout(() => timeoutHandler(), (5 * 1000 * 60)); // 5 mins
 };
 
+const removeAnimation = () => {
+  app.ticker.remove(f.ticker);
+  const field = ui.components.score.fields.wins.text;
+  Actions.scaleTo(field, 1, 1, 0.5, Interpolations.linear).play();
+};
 
-const saveDataAndClear = () => {
-  ui.components.score.resetField('wins');
-
+const updateSessionData = (num) => {
   const csf = ui.components.score.fields;
   const btotal = ui.components.bets.total();
 
-  // set session value
-  // !important - must be after reset wins field..
-  file.setsession(csf.credits.value + btotal);
-  app.ticker.remove(f.ticker);
-}
+  file.setnumber('/cfcashout.data', 0);
+  file.setnumber('/cfsession.data', csf.credits.value + btotal + num);
+};
 
 
 const hopperSuccess = () => {
-  saveDataAndClear();
+  removeAnimation();
+  updateSessionData(0);
 
-  const field = ui.components.score.fields.wins.text;
-  Actions.scaleTo(field, 1, 1, 0.5, Interpolations.linear).play();
-
+  ui.components.score.resetField('wins');
   next(1000, () => setContext('playing'));
 };
 
 const hopperErrorFallback = (params) => {
-  saveDataAndClear();
+  removeAnimation();
 
-  // fallback to error context to propper handle..
-  setContext('error', params);
+  if (params.code == 109) {
+    updateSessionData(params.data);
+
+    // fallback to error context to propper handle..
+    setContext('error', params);
+    return;
+  }
+
+  setContext('error', {code: 110, data: 0}); // unknown error...
 };
 
 
@@ -68,9 +70,15 @@ const f = {
     const btotal = ui.components.bets.total();
 
     file.audit('GAME', 'CASHOUT', wins, csf.credits.value, btotal);
-    file.setsession(wins + csf.credits.value + btotal);
+
+    file.setnumber('/cfcashout.data', wins);
+    file.setnumber('/cfsession.data', wins + csf.credits.value + btotal);
 
     animateRelease();
+
+    // TODO: Timeout...
+    // check for cfgpio errors..
+    // f.timeout = setHandledTimeout(() => timeoutHandler(), (5 * 1000 * 60)); // 5 mins
 
     next(500, () => gpio.send.hopperReleaseCoins(wins));
   },

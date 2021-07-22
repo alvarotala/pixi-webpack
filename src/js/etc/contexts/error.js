@@ -6,7 +6,7 @@ import { file } from '../../core/utils.js'
 import { SimpleText } from '../TextField.js'
 
 const f = {
-  init: (params) => {
+  init: (error) => {
     const res = PIXI.Loader.shared.resources;
     const container = new PIXI.Sprite(res.errorscreen.texture);
 
@@ -26,26 +26,16 @@ const f = {
     ui.view.addChild(container);
 
     f.message.setText('Fuera de servicio\n\n');
+    f.message.appendText('Error: ' + error.code + '\n\n');
 
-    file.getsession((num) => f.handle_errors(num, params));
+    file.getnumber('/cfsession.data', (num) => {
+      if (num > 0) {
+        f.message.appendText('Créditos para devolución: ' + num);
+      }
+    });
 
     gpio.send.lightsOff();
     ui.stopAll();
-  },
-
-  handle_errors: (credits, error) => {
-    const setCredits = () => {
-      if (credits > 0) {
-        f.message.appendText(credits + ' créditos para devolución.');
-      }
-    };
-
-
-    if (error.code == 109) { // Hopper error..
-      credits = credits + parseInt(error.data);
-    }
-
-    setCredits(credits);
   }
 };
 

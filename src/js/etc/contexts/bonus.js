@@ -39,7 +39,7 @@ const completed = (result) => {
     bonus.amount *= 2;
     bonus.field.setText(bonus.amount);
 
-    file.setsession(csf.credits.value + csf.wins.value + bonus.amount);
+    file.setnumber('/cfsession.data', csf.credits.value + csf.wins.value + bonus.amount);
 
     runsequencial(100,
       () => gpio.send.ledstripAnimation(animations.ledstrip.fade(200)),
@@ -56,7 +56,7 @@ const completed = (result) => {
   bonus.amount = 0; // lose all
   bonus.field.setText(bonus.amount);
 
-  file.setsession(csf.credits.value + csf.wins.value);
+  file.setnumber('/cfsession.data', csf.credits.value + csf.wins.value);
 
   // TODO: play loser sound..
   next(2000, dismiss);
@@ -121,7 +121,7 @@ export const ContextBonus = {
     canPlay = false;
 
     const csf = ui.components.score.fields;
-    file.setsession(csf.credits.value + csf.wins.value + params.amount);
+    file.setnumber('/cfsession.data', csf.credits.value + csf.wins.value + params.amount);
 
     ui.components.bonus.amount = params.amount;
     ui.components.bonus.animateShow();

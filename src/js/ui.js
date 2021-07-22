@@ -134,7 +134,7 @@ export default class UIManager {
     app.ticker.add(actionsticker);
 
     next(2000, () => {
-      file.getsession((num) => {
+      file.getnumber('/cfsession.data', (num) => {
         if (num == 0) {
           setContext('idle')
           return;

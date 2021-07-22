@@ -25,15 +25,6 @@ export default class BackgroundComponent {
 
     ui.view.addChild(this.container);
     ui.view.addChild(this.logo);
-
-    this.tick = 0;
-
-    this.ticker = (delta) => {
-      this.tick+=0.02;
-      this.container.alpha = 0.6 + Math.sin(this.tick) * 0.25;
-    };
-
-    app.ticker.add(this.ticker);
   }
 
 }

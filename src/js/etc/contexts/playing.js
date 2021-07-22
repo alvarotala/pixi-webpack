@@ -96,7 +96,7 @@ const updateState = async () => {
   const btotal = ui.components.bets.total();
 
   // set session value
-  file.setsession(csf.credits.value + csf.wins.value + btotal);
+  file.setnumber('/cfsession.data', csf.credits.value + csf.wins.value + btotal);
 
   const keys = [0,0,0, 0,0,0, 0,0,0,0,0,0,0,0];
 

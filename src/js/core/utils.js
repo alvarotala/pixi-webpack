@@ -118,30 +118,17 @@ export const fadeOutSound = (name, speed = 0.1, ms = 50) => {
   }, ms);
 };
 
-
-let config_path, counters_path, audit_path, berror_path, session_path, cashdata_path;
-export const set_basepath = (path) => {
-  config_path   = path + "/cfconfig.json";
-  audit_path    = path + "/cfaudit.log";
-  berror_path   = path + "/cfgpio_error.data";
-  session_path  = path + "/cfsession.data";
-  cashdata_path = path + "/cfcash.data";
-  
-  console.info("***** config.base_path", path);
-};
-
-
 export const file = {
 
   w: (path, data, mode = 'w') => {
     if (!window.electron) return;
-    window.electron.file.write(path, data, {flag: mode});
+    window.electron.file.write(config.base_path + path, data, {flag: mode});
   },
 
   r: (path, callback) => {
     if (!window.electron) return callback(null);
-    window.electron.file.read(path, (success, data) => {
-      if (!success) callback(null);
+    window.electron.file.read(config.base_path + path, (success, data) => {
+      if (!success) return callback(null);
       callback(data);
     });
   },
@@ -157,24 +144,16 @@ export const file = {
     });
   },
 
-  getconfig: (callback) => {
-    file.readjson(config_path, callback);
-  },
-
-  setconfig: (data) => {
-    file.writejson(config_path, data);
-  },
-
   audit: (...args) => {
     if (!window.electron) return;
     if (args == null) args = ['ERR', 708];
     args.unshift(Date.now())
     args.push('\r\n')
-    file.w(audit_path, args.join(':'), 'a');
+    file.w('/cfaudit.log', args.join(':'), 'a');
   },
 
   getberror: (callback) => {
-    file.r(berror_path, (data) => {
+    file.r('/cfgpio_error.data', (data) => {
       if (data == null) {
         return callback(null);
       }
@@ -192,37 +171,25 @@ export const file = {
   },
 
   clearberror: () => {
-    file.w(berror_path, 'E:0:0', 'w');
+    file.w('/cfgpio_error.data', 'E:0:0', 'w');
   },
 
-  getsession: (callback) => {
-    file.r(session_path, (num) => {
+  getnumber: (path, callback) => {
+    file.r(path, (num) => {
       if (num == null || num == undefined) return callback(0);
       const inum = parseInt(num);
       if (isNaN(inum)) return callback(0);
-
-      console.log('inum', inum);
-
       callback(inum);
     });
   },
 
-  setsession: (num) => {
+  setnumber: (path, num) => {
     if (isNaN(num) || num == null || num == undefined) return;
-    file.w(session_path, num.toString());
+    file.w(path, num.toString());
   },
 
-  updatecash: (type, num) => {
-    if (type != 'in' && type != 'out') return;
-    if (isNaN(num)) return;
-
-    const filep = cashdata_path +'.'+ type;
-
-    file.r(filep, (n) => {
-      let nn = parseInt(n);
-      if (isNaN(nn)) nn = 0;
-      file.w(filep, (nn + num).toString());
-    });
+  updatenumber: (path, num) => {
+    file.getnumber(path, (i) => file.setnumber(path, i + num));
   }
 
 };

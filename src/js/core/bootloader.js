@@ -5,7 +5,7 @@ import Terminal from './terminal.js'
 
 import { log, next, pause, file } from './utils.js'
 
-import { startGPIOInterface, mapGPIOtoInputs, rawGPIOListener, mapsetup, removeGPIOListeners } from './cfgpio.js'
+import { startGPIOInterface, mapGPIOtoInputs, rawGPIOListener, mapsetup, removeGPIOListeners, sendDataToGPIO } from './cfgpio.js'
 
 
 let terminal = new Terminal();
@@ -24,7 +24,7 @@ class Bootloader {
 
       gpio.send.disableAll();
 
-      file.getconfig((object) => {
+      file.readjson('/cfconfig.json', (object) => {
         if (object == null) {
 
           // check if installed..
@@ -51,22 +51,28 @@ class Bootloader {
       }
 
       this.error = error;
-      const errorn = error.data;
 
-      file.getsession((num) => {
-        this.session = num + errorn;
+      terminal.clear();
+      terminal.append('-> ERROR: ' + error.code);
+      terminal.newline();
 
-        terminal.clear();
-        terminal.append('-> ERROR: ' + error.code);
-        terminal.newline();
-
-        terminal.append('-> CREDITOS: ' + this.session);
+      this.getcredits((num) => {
+        terminal.append('-> CREDITOS: ' + num);
         terminal.newline(2);
 
-        terminal.newline();
-        terminal.append('Técnico requerido para desbloquear..');
+        terminal.append('-> Técnico requerido para desbloquear..');
+        terminal.newline(2);
 
-        next(4000, () => this.settings_auth());
+        terminal.append('8- Ingresar');
+      });
+
+      this.keymapListener((key) => {
+        switch (key) {
+
+          case 'numpad:7': // reset errors
+            this.settings_auth()
+            break;
+        }
       });
     });
   }
@@ -125,14 +131,6 @@ class Bootloader {
 
     const settings_auth_update_screen = () => {
       terminal.clear();
-
-      if (this.error != undefined) {
-        terminal.append('-> ERROR: ' + this.error.code);
-        terminal.newline();
-
-        terminal.append('-> CREDITOS: ' + this.session);
-        terminal.newline(2);
-      }
 
       terminal.append("-> Ingresar PIN de acceso:");
       terminal.newline()
@@ -209,77 +207,118 @@ class Bootloader {
     terminal.append('-> Configuracion de sistema');
     terminal.newline(2);
 
-    if (this.error != undefined) {
-      terminal.append('---> ERROR: ' + this.error.code);
-      terminal.newline();
-
-      terminal.append('---> CREDITOS: ' + this.session);
-      terminal.newline(2);
-    }
-
-    terminal.append('1- Configurar botonera');
-    terminal.append('2- Configurar pantalla');
-
-    terminal.newline();
 
     if (this.error == undefined) {
 
-      terminal.append('3- Cargar');
-      terminal.append('4- Retirar');
+      terminal.append('1- Configurar botonera');
+      terminal.append('2- Configurar pantalla');
+      terminal.append('3- Configurar red');
 
       terminal.newline();
 
+      terminal.append('5- Retirar monedas');
+
+      terminal.newline();
+
+      terminal.append('6- Actualizar datos');
       terminal.append('7- Guardar configuraciones');
       terminal.append('8- Iniciar juego');
+
+      terminal.newline(5);
+
+      this.getcredits((num) => {
+        terminal.append('>> Creditos de sesion: ' + num);
+      });
+
+      file.getnumber('/cfgpio_counter_in.data', (num) => {
+        terminal.append('>> Contador IN: ' + num);
+      });
+
+      file.getnumber('/cfgpio_counter_out.data', (num) => {
+        terminal.append('>> Contador OUT: ' + num);
+      });
+
+      file.r('/cfcomm.mode', (str) => {
+        terminal.append('>> Modo de red: ' + str);
+      });
+
+      file.r('/uuid', (data) => {
+        terminal.append('>> UUID: ' + data);
+      });
+
+      this.getlastconn((mins) => {
+        if (mins == null) {
+          terminal.append('>> Ultima conexion: N/d');
+          return;
+        }
+
+        terminal.append('>> Ultima conexion (min): ' + mins);
+      });
+
+
+      this.keymapListener((key) => {
+        switch (key) {
+
+          case 'numpad:0': // set keys mapping
+            this.resetscreen();
+            this.settings_keymap();
+            break;
+
+          case 'numpad:1': // change screen size & position
+            this.settings_screen();
+            break;
+
+          case 'numpad:2': // set networking mode
+            this.settings_networking();
+            break;
+
+
+          case 'numpad:4': // retirar monedas
+            if (this.error != undefined) return;
+            this.settings_cashout();
+            break;
+
+
+          case 'numpad:5': // refresh screen...
+            this.settings_main();
+            break;
+
+          case 'numpad:6': // save all data and register device to server..
+            if (this.error != undefined) return;
+            this.settings_save();
+            break;
+
+          case 'numpad:7': // start game!
+            if (this.error != undefined) return;
+            this.start_game();
+            break;
+        }
+      });
     }
 
 
     else { // handle errors first!
-      terminal.append('6- Desbloquear error');
+      terminal.clear();
+      terminal.append('-> ERROR: ' + this.error.code);
       terminal.newline();
+
+      this.getcredits((num) => {
+        terminal.append('-> CREDITOS: ' + num);
+        terminal.newline(2);
+
+        terminal.append('8 - Desbloquear error');
+      });
+
+      this.keymapListener((key) => {
+        switch (key) {
+
+          case 'numpad:7': // reset errors
+            this.reset_error();
+            break;
+        }
+      });
     }
 
-
-    this.keymapListener((key) => {
-      switch (key) {
-
-        case 'numpad:0': // set keys mapping
-          this.resetscreen();
-          this.settings_keymap();
-          break;
-
-        case 'numpad:1': // channge screen size & position
-          this.settings_screen();
-          break;
-
-
-        case 'numpad:2': // cargar
-          if (this.error != undefined) return;
-          this.settings_set_amount("in");
-          break;
-
-        case 'numpad:3': // retirar
-          if (this.error != undefined) return;
-          this.settings_set_amount("out");
-          break;
-
-
-        case 'numpad:5': // reset errors
-          this.reset_error();
-          break;
-
-
-        case 'numpad:6': // save all data and register device to server..
-          if (this.error != undefined) return;
-          this.settings_save();
-          break;
-
-        case 'numpad:7': // start game!
-          if (this.error != undefined) return;
-          this.start_game();
-          break;
-      }
-    });
   }
 
   reset_error() {
@@ -287,14 +326,29 @@ class Bootloader {
     this.resetscreen();
     terminal.append('Limpiando errores...');
 
-    file.setsession(this.session);
-    file.clearberror();
+    let errnum = 0;
+    if (this.error != undefined && this.error != 'error') {
 
-    this.error = undefined;
-    next(4000, () => this.settings_main());
+      if (this.error.code == 109) { // hopper error..
+        errnum = this.error.data;
+      }
+    }
+
+    this.getcredits((num) => {
+      if (num > 0) {
+        file.setnumber('/cfcashout.data', 0);
+        file.setnumber('/cfsession.data', num);
+      }
+
+      // clear all errors..
+      file.clearberror();
+
+      this.error = undefined;
+      next(4000, () => this.settings_main());
+    });
   }
 
-  // setup keys mapping
+  // keys mapping
   async settings_keymap() {
     this.resetscreen();
     this.mapping = [];
@@ -337,7 +391,7 @@ class Bootloader {
     updateScreen();
   }
 
-  // settings: screen size & position
+  // screen size & position
   settings_screen() {
     this.resetscreen();
 
@@ -397,7 +451,40 @@ class Bootloader {
     });
   }
 
-  // save and send data to server
+  settings_networking() {
+    this.resetscreen();
+
+    terminal.append('-> Configuracion de red');
+    terminal.newline(2);
+
+    terminal.append('1- Wifi');
+    terminal.append('2- GPRS');
+    terminal.newline(2);
+
+    terminal.append('8- Volver');
+    terminal.newline(5);
+
+    this.keymapListener((key) => {
+      switch (key) {
+
+        case 'numpad:0':
+          file.w('/cfcomm.mode', 'wifi');
+          this.settings_main();
+          break;
+
+        case 'numpad:1':
+          file.w('/cfcomm.mode', 'gprs');
+          this.settings_main();
+          break;
+
+        case 'numpad:7':
+          this.settings_main();
+          break;
+      }
+    });
+  }
+
+  // save and send data to server?
   async settings_save() {
     this.resetscreen();
 
@@ -411,7 +498,7 @@ class Bootloader {
       mapping: this.mapping
     };
 
-    file.setconfig(app.config);
+    file.writejson('/cfconfig.json', app.config);
     log("***** saved global.app.config", app.config);
 
     terminal.append('> Enviando datos, aguarde un momento...');
@@ -427,34 +514,85 @@ class Bootloader {
   }
 
 
-  settings_set_amount(delta) {
+  settings_cashout() {
     this.resetscreen();
+    let amount = 0;
+
+    const cashoutAccountable = () => {
+      removeGPIOListeners();
+
+      terminal.clear();
+      terminal.append('-> Contabilidad actualizada..');
+      terminal.newline();
+
+      file.audit('ADMIN', 'CASHOUT', amount);
+
+      // reset session if any..
+      file.setnumber('/cfsession.data', 0);
+      file.setnumber('/cfcashout.data', 0);
+
+      file.updatenumber('/cfgpio_counter_out.data', amount);
+
+      next(4000, () => this.settings_main());
+    };
+
+    const cashoutHopper = () => {
+      terminal.clear();
+      terminal.append('-> Liberando monedas... aguarde a que termine.');
+      terminal.newline();
+
+      rawGPIOListener((data) => {
+        if (this.gpioHasError(data)) return;
+
+        if (data == 'H:0') { // success..
+          return this.settings_main();
+        }
+
+        const comps = data.split(":");
+        if (comps[0] == 'E' && comps[1] == '109') {
+          const num = parseInt(comps[2]);
+
+          this.error = {code: 109, data: num}
+          file.audit('ADMIN', 'CASHOUT', 'ERR', 109, num);
+
+          terminal.clear();
+          terminal.append('-> Error... Hopper atascado..');
+
+          next(4000, () => this.settings_main());
+        }
+      });
+
+      file.audit('ADMIN', 'CASHOUT', amount);
+
+      // reset session if any..
+      file.setnumber('/cfsession.data', 0);
+      file.setnumber('/cfcashout.data', 0);
+
+      next(1000, () => sendDataToGPIO('H:' + amount));
+    };
+
 
     const update_screen = () => {
       terminal.clear();
-
-      if (delta == 'in') {
-        terminal.append('-> Cargar monedas a hopper.');
-      }
-
-      if (delta == 'out') {
-        terminal.append('-> Retirar monedas de hopper.');
-      }
-
+      terminal.append('-> Retirar monedas');
       terminal.newline(2);
 
-      terminal.append('1 - (+) 1000');
-      terminal.append('2 - (+) 100');
-      terminal.append('3 - (+) 10');
-      terminal.append('4 - (+) 1');
-      terminal.append('5 - (-) 1');
-      terminal.append('6 - (-) 10');
-      terminal.append('7 - (-) 100');
-      terminal.append('8 - (-) 1000');
+      terminal.append('1 - (+) 100');
+      terminal.append('2 - (+) 10');
+      terminal.append('3 - (+) 1');
+      terminal.append('4 - (-) 1');
+      terminal.append('5 - (-) 10');
+      terminal.append('6 - (-) 100');
       terminal.newline(2);
 
       terminal.append('[Cancelar] - Volver');
-      terminal.append('[Pagar]    - Confirmar');
+      terminal.newline(2);
+
+      terminal.append('** ATENCION: si confirma, se borraran todos los datos de sesion.');
+      terminal.newline(2);
+
+      terminal.append('[Enter]    - Confirmar (Contable)');
+      terminal.append('[Pagar]    - Confirmar (Hopper)');
 
       terminal.newline(3);
 
@@ -464,54 +602,45 @@ class Bootloader {
       terminal.append('   [ ' + amount + ' ]');
     };
 
-
-    let amount = 0;
     update_screen();
-
     this.keymapListener((key) => {
       switch (key) {
 
+        case 'pay':
+          return cashoutHopper();
+
         case 'play':
-          file.updatecash(delta, amount);
-          return this.settings_main();
+          return cashoutAccountable();
 
         case 'cancel':
           return this.settings_main();
 
-        case 'numpad:0':
-          amount+=1000;
-          break;
 
-        case 'numpad:1':
+        case 'numpad:0':
           amount+=100;
           break;
 
-        case 'numpad:2':
+        case 'numpad:1':
           amount+=10;
           break;
 
-        case 'numpad:3':
+        case 'numpad:2':
           amount+=1;
           break;
 
 
-        case 'numpad:4':
+        case 'numpad:3':
           amount-=1;
           if (amount<0)amount=0;
           break;
 
-        case 'numpad:5':
+        case 'numpad:4':
           amount-=10;
           if (amount<0)amount=0;
           break;
 
-        case 'numpad:6':
+        case 'numpad:5':
           amount-=100;
-          if (amount<0)amount=0;
-          break;
-
-        case 'numpad:7':
-          amount-=1000;
           if (amount<0)amount=0;
           break;
       }
@@ -523,13 +652,22 @@ class Bootloader {
 
   start_game() {
     this.resetscreen();
-    terminal.append('Iniciando juego...');
 
-    next(3000, async () => {
-      terminal.dispose();
-      terminal = null;
+    this.getlastconn((mins) => {
+      const days = Math.floor(mins / 60 / 24);
+      if (mins == null || days > 5) { // if no connection in 5 days
+        terminal.append('>> ERROR: 4005');
+        return;
+      }
 
-      this.resolve().then(mapGPIOtoInputs);
+      terminal.append('Iniciando juego...');
+
+      next(3000, async () => {
+        terminal.dispose();
+        terminal = null;
+
+        this.resolve().then(mapGPIOtoInputs);
+      });
     });
   }
 
@@ -554,8 +692,49 @@ class Bootloader {
     if (data != 'error') return false;
 
     terminal.clear();
-    terminal.append('ERROR: 2054');
+    terminal.append('-> ERROR: 2054');
+
+    this.getcredits((num) => {
+      terminal.newline(2)
+      terminal.append('>> Creditos de sesion: ' + num);
+    });
+
     return true;
+  }
+
+  getlastconn(callback) {
+    file.getnumber('/cfcomm.ts', (num) => {
+      if (num == 0) {
+        return callback(null);
+      }
+
+      const last = new Date(num)
+      const diff = Date.now() - last;
+      const minutes = Math.floor(diff / 1000 / 60);
+
+      callback(minutes);
+    });
+  }
+
+  // for session credits..
+  getcredits(callback) {
+    file.getnumber('/cfsession.data', (session) => {
+      if (session == 0) {
+        return callback(0);
+      }
+
+      file.getnumber('/cfcashout.data', (cashout) => {
+        let err = 0;
+        if (this.error != undefined && this.error != 'error') {
+
+          if (this.error.code == 109) { // hopper error..
+            err = this.error.data;
+          }
+        }
+
+        callback(session - cashout + err);
+      });
+    });
   }
 
 }
