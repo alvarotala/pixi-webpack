@@ -3,9 +3,7 @@ const config = {
   width   : 720,
   height  : 1280,
 
-
-  settings_pin: '11326478',
-  // settings_pin: '8888',
+  settings_pin: '113264785',
 
   autostart_interrupts: 4,
   autostart_timeout: 5, // seconds

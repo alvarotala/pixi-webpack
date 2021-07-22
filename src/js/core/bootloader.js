@@ -7,6 +7,8 @@ import { log, next, pause, file } from './utils.js'
 
 import { startGPIOInterface, mapGPIOtoInputs, rawGPIOListener, mapsetup, removeGPIOListeners, sendDataToGPIO } from './cfgpio.js'
 
+import * as PIXI from 'pixi.js'
+import QRious from 'qrious';
 
 let terminal = new Terminal();
 
@@ -24,20 +26,31 @@ class Bootloader {
 
       gpio.send.disableAll();
 
-      file.readjson('/cfconfig.json', (object) => {
-        if (object == null) {
-
-          // check if installed..
-          // if not, set keys mapping first!
-          this.settings_keymap();
-          return;
+      file.r('/uuid', (data) => {
+        if (data == null) {
+          terminal.clear();
+          terminal.append('ERROR: 2053 (uuid)');
+          return; // uuid not generated..?? cfcomm??
         }
 
-        log("***** global.app.config", object);
-        this.mapping = object.mapping
-        global.app.config = object;
+        this.uuid = data;
+        this.qrcode = new PIXI.Sprite(generateQRCode('https://admin.crazyfruits.app/m/i/' + data));
 
-        this.check_clean_start();
+        file.readjson('/cfconfig.json', (object) => {
+          if (object == null) {
+
+            // check if installed..
+            // if not, set keys mapping first!
+            this.settings_keymap();
+            return;
+          }
+
+          log("***** global.app.config", object);
+          this.mapping = object.mapping
+          global.app.config = object;
+
+          this.check_clean_start();
+        });
       });
     });
   }
@@ -226,6 +239,8 @@ class Bootloader {
 
       terminal.newline(5);
 
+      terminal.append('>> UUID: ' + this.uuid);
+
       this.getcredits((num) => {
         terminal.append('>> Creditos de sesion: ' + num);
       });
@@ -242,10 +257,6 @@ class Bootloader {
         terminal.append('>> Modo de red: ' + str);
       });
 
-      file.r('/uuid', (data) => {
-        terminal.append('>> UUID: ' + data);
-      });
-
       this.getlastconn((mins) => {
         if (mins == null) {
           terminal.append('>> Ultima conexion: N/d');
@@ -255,8 +266,19 @@ class Bootloader {
         terminal.append('>> Ultima conexion (min): ' + mins);
       });
 
+      if (terminal.qrcodeadded != true) {
+        terminal.qrcodeadded = true;
+
+        this.qrcode.x = 40;
+        this.qrcode.y = config.height - 240;
+        terminal.container.addChild(this.qrcode);
+      }
+
+      this.qrcode.visible = true;
 
       this.keymapListener((key) => {
+        this.qrcode.visible = false;
+
         switch (key) {
 
           case 'numpad:0': // set keys mapping
@@ -654,8 +676,13 @@ class Bootloader {
     this.resetscreen();
 
     this.getlastconn((mins) => {
+      if (mins == null) {
+        terminal.append('>> ERROR: 4004');
+        return;
+      }
+
       const days = Math.floor(mins / 60 / 24);
-      if (mins == null || days > 5) { // if no connection in 5 days
+      if (days > 5) { // if no connection in 5 days
         terminal.append('>> ERROR: 4005');
         return;
       }
@@ -708,9 +735,8 @@ class Bootloader {
         return callback(null);
       }
 
-      const last = new Date(num)
-      const diff = Date.now() - last;
-      const minutes = Math.floor(diff / 1000 / 60);
+      const diff = (Date.now() / 1000) - num;
+      const minutes = Math.floor(diff / 60);
 
       callback(minutes);
     });
@@ -738,6 +764,17 @@ class Bootloader {
   }
 
 }
+
+const generateQRCode = (value, size = '200') => {
+    const code = new QRious({
+        background: 'black',
+        foreground: 'white',
+        size,
+        value,
+    });
+
+    return PIXI.Texture.from(code.toDataURL());
+};
 
 export const bootloader = (cfgpio_url, resolve) => {
   terminal.load('Crazy Fruits Machines - v0.1\n--------------------------------------------\n\n');
