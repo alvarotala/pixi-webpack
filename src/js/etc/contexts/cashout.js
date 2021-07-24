@@ -29,35 +29,17 @@ const removeAnimation = () => {
   Actions.scaleTo(field, 1, 1, 0.5, Interpolations.linear).play();
 };
 
-const updateSessionData = (num) => {
-  const csf = ui.components.score.fields;
-  const btotal = ui.components.bets.total();
-
-  file.setnumber('/cfcashout.data', 0);
-  file.setnumber('/cfsession.data', csf.credits.value + btotal + num);
-};
-
 
 const hopperSuccess = () => {
-  removeAnimation();
-  updateSessionData(0);
-
+  file.setnumber('/cfcashout.data', 0);
   ui.components.score.resetField('wins');
+
   next(1000, () => setContext('playing'));
 };
 
 const hopperErrorFallback = (params) => {
-  removeAnimation();
-
-  if (params.code == 109) {
-    updateSessionData(params.data);
-
-    // fallback to error context to propper handle..
-    setContext('error', params);
-    return;
-  }
-
-  setContext('error', {code: 110, data: 0}); // unknown error...
+  ui.components.score.resetField('wins');
+  setContext('error', params); // fallback to error context to propper handle..
 };
 
 
@@ -72,7 +54,7 @@ const f = {
     file.audit('GAME', 'CASHOUT', wins, csf.credits.value, btotal);
 
     file.setnumber('/cfcashout.data', wins);
-    file.setnumber('/cfsession.data', wins + csf.credits.value + btotal);
+    file.setnumber('/cfsession.data', csf.credits.value + btotal);
 
     animateRelease();
 
@@ -82,6 +64,8 @@ const f = {
 
     next(500, () => gpio.send.hopperReleaseCoins(wins));
   },
+
+  dealloc: () => removeAnimation(),
 
   inputs: {
     hopper: () => hopperSuccess(),

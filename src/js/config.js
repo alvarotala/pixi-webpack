@@ -3,17 +3,18 @@ const config = {
   width   : 720,
   height  : 1280,
 
-  settings_pin: '113264785',
+  settings_pin: 113264785,
+
+  base_path: '/home/alvarotala/cfdata',
+  // base_path: '/Users/alvaro/Desktop/cfdata',
 
   autostart_interrupts: 4,
-  autostart_timeout: 5, // seconds
+  autostart_timeout: 10, // seconds
 
   idle_timeout: 10, /// seconds
 
   path_assets : './assets',
 
-  base_path: '/home/alvarotala/cfdata',
-  // base_path: '/Users/alvaro/Desktop/cfdata',
 
   cfgpio_url: 'ws://localhost:8080',
   cfgpio_remote_debug: 'ws://192.168.100.113:8080',

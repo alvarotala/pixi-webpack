@@ -348,19 +348,11 @@ class Bootloader {
     this.resetscreen();
     terminal.append('Limpiando errores...');
 
-    let errnum = 0;
-    if (this.error != undefined && this.error != 'error') {
-
-      if (this.error.code == 109) { // hopper error..
-        errnum = this.error.data;
-      }
-    }
-
     this.getcredits((num) => {
-      if (num > 0) {
-        file.setnumber('/cfcashout.data', 0);
-        file.setnumber('/cfsession.data', num);
-      }
+
+      // reset session data..
+      file.setnumber('/cfcashout.data', 0);
+      file.setnumber('/cfsession.data', num);
 
       // clear all errors..
       file.clearberror();
@@ -560,7 +552,7 @@ class Bootloader {
 
     const cashoutHopper = () => {
       terminal.clear();
-      terminal.append('-> Liberando monedas... aguarde a que termine.');
+      terminal.append('-> Liberando monedas... aguarde un momento.');
       terminal.newline();
 
       rawGPIOListener((data) => {
@@ -572,7 +564,7 @@ class Bootloader {
 
         const comps = data.split(":");
         if (comps[0] == 'E' && comps[1] == '109') {
-          const num = parseInt(comps[2]);
+          const num = parseInt(comps[2]); // data.. or coins left
 
           this.error = {code: 109, data: num}
           file.audit('ADMIN', 'CASHOUT', 'ERR', 109, num);
@@ -624,7 +616,6 @@ class Bootloader {
       terminal.append('   [ ' + amount + ' ]');
     };
 
-    update_screen();
     this.keymapListener((key) => {
       switch (key) {
 
@@ -669,6 +660,8 @@ class Bootloader {
 
       update_screen();
     });
+
+    update_screen();
   }
 
 
@@ -745,21 +738,25 @@ class Bootloader {
   // for session credits..
   getcredits(callback) {
     file.getnumber('/cfsession.data', (session) => {
-      if (session == 0) {
-        return callback(0);
-      }
 
-      file.getnumber('/cfcashout.data', (cashout) => {
-        let err = 0;
-        if (this.error != undefined && this.error != 'error') {
+      if (this.error != undefined) {
 
-          if (this.error.code == 109) { // hopper error..
-            err = this.error.data;
-          }
+        if (this.error.code = 109) { // hopper error...
+          return file.getnumber('/cfcashout.data', (cashout) => {
+            if (cashout > 0) { // if user ask for cashout...
+              const diff = cashout - (cashout - this.error.data);
+              return callback(session + diff);
+            }
+
+            // if no user cashout.. then ignore error file data..
+            callback(session);
+          });
         }
 
-        callback(session - cashout + err);
-      });
+      }
+
+      // no errors...
+      callback(session);
     });
   }
 

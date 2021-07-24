@@ -140,7 +140,7 @@ export default class UIManager {
           return;
         }
 
-        ui.components.score.addAtField('wins', num);
+        ui.components.score.addAtField('credits', num);
         setContext('playing');
       });
     });
